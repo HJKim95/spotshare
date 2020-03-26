@@ -1,0 +1,31 @@
+# Uncomment the next line to define a global platform for your project
+# platform :ios
+
+target 'SpotShare' do
+  # Comment the next line if you're not using Swift and don't want to use dynamic frameworks
+  use_frameworks!
+
+  # Pods for SpotShare
+
+pod 'Firebase/Database'
+pod 'Firebase/Auth'
+pod 'Firebase/Storage'
+pod 'Firebase/Analytics'
+
+pod 'GoogleMaps'
+
+pod 'collection-view-layouts/PinterestLayout'
+
+pod 'Cosmos', '~> 21.0'
+
+pod 'MultiSlider'
+
+pod 'SDWebImage'
+
+pod 'SwiftyJSON'
+pod 'Alamofire', '~> 5.0'
+
+pod 'lottie-ios'
+
+
+end
