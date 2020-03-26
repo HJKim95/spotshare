@@ -168,7 +168,31 @@ class CategoryCollectionView: UIViewController, UICollectionViewDelegateFlowLayo
         
         dropDownCollectionview.register(dropDownCell.self, forCellWithReuseIdentifier: dropdownid)
         
+//        test()
+    }
+    
+    let arr = ["맛이차이나", "산왕반점", "소고산제일루", "심양", "아빠의양식당", "중화가정", "중화복춘", "진가", "진만두", "징기스", "초마", "한양중식", "항방양꼬치"]
+    let testArr = [2.1,3.3,4.5,5.0,2.1,2.3,4.3,2.3,2.4,1.2,1.4,1.5,1.5]
+    let toiletArr = ["남녀구분","공용","남녀구분","공용","남녀구분","공용","남녀구분","공용","남녀구분","공용","남녀구분","공용","남녀구분"]
         
+    fileprivate func test() {
+        // 데이터 추가
+        for i in 0..<arr.count {
+            let ref = Database.database().reference().child("Test").child(arr[i])
+            let values = ["toilet":toiletArr[i]] as [String : Any]
+            ref.updateChildValues(values)
+        }
+        
+        // 데이터 읽기
+        //key는 snapshot에서 맨앞부분을 칭함.
+        //snapshot 불러올때부터 filter해서 가져와서 바로 밑에 원래 하던 거 넣으면 될듯!!!! 개꾸르!!!!!
+        
+//        let ref = Database.database().reference().child("Test")
+//        var query = ref.queryOrdered(byChild: "points")
+//        query.observe(.childAdded) { (snapshot) in
+//            print(snapshot)
+//
+//        }
     }
     
     
@@ -507,6 +531,9 @@ class CategoryListCell: UICollectionViewCell, UICollectionViewDelegateFlowLayout
     weak var categoryDelegate: CategoryCollectionView?
     var category: String? {
         didSet {
+            // 임시방편
+            let location = CLLocationCoordinate2D(latitude: 37.551597, longitude: 126.924976)
+            testCategory_firebase(category: category ?? "Test", location: location)
             locationManager.delegate = self
             locationManager.requestWhenInUseAuthorization()
             locationManager.desiredAccuracy = kCLLocationAccuracyBest
@@ -533,7 +560,8 @@ class CategoryListCell: UICollectionViewCell, UICollectionViewDelegateFlowLayout
     override init(frame: CGRect) {
         super.init(frame: frame)
         setupLayouts()
-//        getCategory_firebase()
+        
+        
     }
     
     required init?(coder: NSCoder) {
@@ -554,10 +582,10 @@ class CategoryListCell: UICollectionViewCell, UICollectionViewDelegateFlowLayout
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: cellid, for: indexPath) as! innerSpotCell
 
-        if indexPath.item == indexInfo - 1 && finishedPaging {
-            getCategory_firebase(category: category ?? "한식", location: myLocation)
-        }
-        if let resinfo = categoryResInfos[category ?? "한식"]?[indexPath.item] {
+//        if indexPath.item == indexInfo - 1 && finishedPaging {
+//            getCategory_firebase(category: category ?? "Test", location: myLocation)
+//        }
+        if let resinfo = categoryResInfos[category ?? "Test"]?[indexPath.item] {
             cell.resLabel.letterSpacing(text: resinfo.resName ?? "", spacing: -0.1)
             let point = resinfo.starPoint ?? 3.5
             cell.pointLabel.text = "\(String(describing: point))"
@@ -591,12 +619,12 @@ class CategoryListCell: UICollectionViewCell, UICollectionViewDelegateFlowLayout
     }
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return categoryResInfos[category ?? "한식"]?.count ?? 0
+        return categoryResInfos[category ?? "Test"]?.count ?? 0
     }
     
     @objc fileprivate func goRestaurant(sender: UITapGestureRecognizer) {
         let indexPath = IndexPath(item: sender.view?.tag ?? 0, section: 0)
-        if let resinfo = categoryResInfos[category ?? "한식"]?[indexPath.item] {
+        if let resinfo = categoryResInfos[category ?? "Test"]?[indexPath.item] {
             categoryDelegate?.goRestaurant(resInfo: resinfo)
         }
     }
@@ -614,8 +642,8 @@ class CategoryListCell: UICollectionViewCell, UICollectionViewDelegateFlowLayout
         guard let lat = location?.coordinate.latitude else {return}
         guard let long = location?.coordinate.longitude else {return}
         let convertLocation = CLLocationCoordinate2D(latitude: lat, longitude: long)
-        self.myLocation = convertLocation
-        getCategory_firebase(category: category ?? "한식", location: convertLocation)
+//        self.myLocation = convertLocation
+//        getCategory_firebase(category: category ?? "한식", location: convertLocation)
         self.locationManager.stopUpdatingLocation()
     }
     
@@ -623,7 +651,7 @@ class CategoryListCell: UICollectionViewCell, UICollectionViewDelegateFlowLayout
     
     var allobject = [String]()
     var resInfos = [ResInfoModel]()
-    let fetchCount = 6
+    let fetchCount = 13
     
     var countInfo = 0
     var indexInfo = 0
@@ -633,21 +661,104 @@ class CategoryListCell: UICollectionViewCell, UICollectionViewDelegateFlowLayout
     var checkCategory: String?
     var finishedPaging = false
     
+    var testAllObject = [String]()
+    var testCount = 6
+    fileprivate func testCategory_firebase(category: String, location: CLLocationCoordinate2D) {
+        let ref = Database.database().reference().child(category)
+        var query = ref.queryOrdered(byChild: "toilet")
+        // value로 해야 first children의 count 총합을 구할수있다.
+        
+        var snapshotCount = 0
+        
+        query.observeSingleEvent(of: .value) { (snapshot) in
+            snapshotCount = snapshot.children.allObjects.count
+            query.observe(.childAdded, with: { [weak self] (snapshot) in
+                    self?.testAllObject.append(snapshot.key)
+                    if snapshotCount == self?.testAllObject.count {
+                        // 여기서 pagination을 추후 적용하면 된다.
+                        for i in self?.testAllObject ?? [""] {
+                            let resReference = Database.database().reference().child("맛집").child(i)
+                            resReference.observeSingleEvent(of: .value, with: { [weak self] (snapshot) in
+                                if let dictionary = snapshot.value as? [String:Any] {
+                                    let resmodel = ResInfoModel()
+                                    
+                                    resmodel.resName = dictionary["resName"] as? String
+                                    resmodel.starPoint = dictionary["resPoints"] as? Double
+                                    guard let lat = (dictionary["lat"] as? CLLocationDegrees) else {return}
+                                    guard let long = (dictionary["long"] as? CLLocationDegrees) else {return}
+                                    resmodel.resLocation = CLLocationCoordinate2D(latitude: lat, longitude: long)
+                                    resmodel.distance = location.distance(from: CLLocationCoordinate2D(latitude: lat, longitude: long))
+                                    resmodel.locationText = (dictionary["location"] as? String)
+                                    resmodel.toilet = dictionary["toilet"] as? String
+                                    
+                                    
+            //                             해당 맛집에서 첫번째 이미지 따오기.
+                                    let firstImageReference = Database.database().reference().child("맛집").child(i).child("FirstResimage")
+                                    firstImageReference.observeSingleEvent(of: .childAdded, with: { (snapshot) in
+                                        if let dictionary = snapshot.value as? [String:Any] {
+                                            resmodel.resImageUrl = dictionary["url"] as? String
+                                            
+                                        }
+                                    })
+                                    
+                                    // 해당 맛집에서 hashtag 따오기
+            //                            let ref = Database.database().reference().child("맛집").child(i).child("hashTag")
+            //                            ref.observeSingleEvent(of: .value) { (snapshot) in
+            //                                if let dictionary = snapshot.value as? [String:Any] {
+            //                                    // 만약 hashTag가 DB에 없다면 결국 최종 append가 안된다고 생각.
+            //                                    resmodel.hash1 = dictionary["hash1"] as? String ?? ""
+            //                                    resmodel.hash2 = dictionary["hash2"] as? String ?? ""
+            //                                    resmodel.hash3 = dictionary["hash3"] as? String ?? ""
+            //                                    resmodel.hash4 = dictionary["hash4"] as? String ?? ""
+            //                                    resmodel.hash5 = dictionary["hash5"] as? String ?? ""
+            //                                }
+            //                            }
+
+                                    self?.resInfos.append(resmodel)
+                                    self?.categoryResInfos[category] = self?.resInfos
+                                    self?.checkCategory = category
+                                    self?.countInfo += 1
+                                    self?.indexInfo += 1
+                                    if self?.countInfo == self?.checkCount {
+            //                                self?.finishedPaging = true
+                                    }
+                                    else {
+            //                                self?.finishedPaging = false
+                                    }
+                                }
+                                DispatchQueue.main.async {
+                                    self?.innerCategoryCollectionview.reloadData()
+                                }
+                            }) { (err) in
+                                print("Failed to fetch resData:", err)
+                            }
+                        }
+                    }
+                }) { (err) in
+                    print("@@@Failed to fetch resData_AllObject:", err)
+                }
+        }
+        
+        
+    }
+    
     fileprivate func getCategory_firebase(category: String, location: CLLocationCoordinate2D) {
         let ref = Database.database().reference().child(category)
-        var query = ref.queryOrderedByKey()
+//        var query = ref.queryOrderedByKey()
+        //테스트용
+        var query = ref.queryOrdered(byChild: "toilet")
         if allobject.count > 0 {
             
             if self.checkCategory != category {
                 self.resInfos.removeAll()
                 self.indexInfo = 0
-                self.checkCount = 6
+                self.checkCount = 14
             }
             
             else {
                 let value = allobject.last
                 query = query.queryStarting(atValue: value)
-                checkCount = 5
+                checkCount = 13
             }
             
         }
@@ -655,11 +766,11 @@ class CategoryListCell: UICollectionViewCell, UICollectionViewDelegateFlowLayout
         allobject.removeAll()
         
         self.countInfo = 0
-        query.queryLimited(toFirst: 6).observe(.childAdded, with: { [weak self] (snapshot) in
+        query.queryLimited(toFirst: 14).observe(.childAdded, with: { [weak self] (snapshot) in
             self?.allobject.append(snapshot.key)
             if self?.allobject.count == self?.fetchCount {
                 if self?.resInfos.count ?? -1 > 0 {
-                    self?.allobject.removeFirst()
+//                    self?.allobject.removeFirst()
                 }
                 
                 for i in self?.allobject ?? [""] {
@@ -683,33 +794,33 @@ class CategoryListCell: UICollectionViewCell, UICollectionViewDelegateFlowLayout
                             firstImageReference.observeSingleEvent(of: .childAdded, with: { (snapshot) in
                                 if let dictionary = snapshot.value as? [String:Any] {
                                     resmodel.resImageUrl = dictionary["url"] as? String
+                                    
                                 }
                             })
                             
                             // 해당 맛집에서 hashtag 따오기
-                            let ref = Database.database().reference().child("맛집").child(i).child("hashTag")
-                            ref.observeSingleEvent(of: .value) { (snapshot) in
-                                if let dictionary = snapshot.value as? [String:Any] {
-                                    // 만약 hashTag가 DB에 없다면 결국 최종 append가 안된다고 생각.
-                                    resmodel.hash1 = dictionary["hash1"] as? String ?? ""
-                                    resmodel.hash2 = dictionary["hash2"] as? String ?? ""
-                                    resmodel.hash3 = dictionary["hash3"] as? String ?? ""
-                                    resmodel.hash4 = dictionary["hash4"] as? String ?? ""
-                                    resmodel.hash5 = dictionary["hash5"] as? String ?? ""
-                                }
-                            }
-                            
-                            
+//                            let ref = Database.database().reference().child("맛집").child(i).child("hashTag")
+//                            ref.observeSingleEvent(of: .value) { (snapshot) in
+//                                if let dictionary = snapshot.value as? [String:Any] {
+//                                    // 만약 hashTag가 DB에 없다면 결국 최종 append가 안된다고 생각.
+//                                    resmodel.hash1 = dictionary["hash1"] as? String ?? ""
+//                                    resmodel.hash2 = dictionary["hash2"] as? String ?? ""
+//                                    resmodel.hash3 = dictionary["hash3"] as? String ?? ""
+//                                    resmodel.hash4 = dictionary["hash4"] as? String ?? ""
+//                                    resmodel.hash5 = dictionary["hash5"] as? String ?? ""
+//                                }
+//                            }
+
                             self?.resInfos.append(resmodel)
                             self?.categoryResInfos[category] = self?.resInfos
                             self?.checkCategory = category
                             self?.countInfo += 1
                             self?.indexInfo += 1
                             if self?.countInfo == self?.checkCount {
-                                self?.finishedPaging = true
+//                                self?.finishedPaging = true
                             }
                             else {
-                                self?.finishedPaging = false
+//                                self?.finishedPaging = false
                             }
                         }
                         DispatchQueue.main.async {

@@ -7,8 +7,10 @@
 //
 
 import UIKit
+import Firebase
 // https://www.youtube.com/watch?v=Ldz-J7Xrk28
 // https://github.com/ergunemr/BottomPopup
+
 protocol circleDelegate {
     func goReview()
     func goRestMonth()
@@ -97,9 +99,9 @@ class MainController: UIViewController, UICollectionViewDelegateFlowLayout, UICo
         setupCollectionview()
         setupSearchBar()
         setupTabBar()
-        
-        
+
     }
+
     
 
     var mainControllerLayout: NSLayoutConstraint?
@@ -218,7 +220,9 @@ class MainController: UIViewController, UICollectionViewDelegateFlowLayout, UICo
     //ExploreCell 눌렀을때
     @objc func OpenCategoryCollectionView(category: String) {
         let cv = CategoryCollectionView()
-        cv.category = category
+//        cv.category = category
+        // 테스트용
+        cv.category = "Test"
         self.navigationController?.pushViewController(cv, animated: true)
         
     }
