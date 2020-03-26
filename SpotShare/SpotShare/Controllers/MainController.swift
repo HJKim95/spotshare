@@ -98,6 +98,8 @@ class MainController: UIViewController, UICollectionViewDelegateFlowLayout, UICo
         setupSearchBar()
         setupTabBar()
         
+        print("teststetetetetetetet")
+        
     }
     
 
