@@ -99,6 +99,7 @@ class MainController: UIViewController, UICollectionViewDelegateFlowLayout, UICo
         setupTabBar()
         
         print("teststetetetetetetet")
+        print("hahahahahahahaha"
         
     }
     
