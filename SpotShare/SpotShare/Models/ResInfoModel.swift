@@ -26,6 +26,12 @@ class ResInfoModel: NSObject {
     var reservation: String?
     var distance: String?
     
+    var open: String?
+    var close: String?
+    var breakStart: String?
+    var breakFinish: String?
+    
+    
     var hash1: String?
     var hash2: String?
     var hash3: String?

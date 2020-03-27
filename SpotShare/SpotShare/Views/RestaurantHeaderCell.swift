@@ -43,6 +43,12 @@ class RestaurantHeaderCell: UICollectionViewCell, UICollectionViewDelegateFlowLa
             hashtagArray.append(resinfo?.hash3 ?? "")
             hashtagArray.append(resinfo?.hash4 ?? "")
             hashtagArray.append(resinfo?.hash5 ?? "")
+            
+            guard var open: String = resinfo?.open else {return}
+            // open 값만 현재 받아와서 보여줬음. 이제 이후로 close값 받아오고 지금 open인지 여부도 확인하고 open누르면 요일마다 시간나오게 하고 그러면 됨.
+            let index = open.index(open.startIndex, offsetBy: 2)
+            open.insert(":", at: index)
+            openTimeLabel.text = "Opens \(open)"
         }
     }
     
@@ -149,7 +155,7 @@ class RestaurantHeaderCell: UICollectionViewCell, UICollectionViewDelegateFlowLa
     
     let openTimeLabel: UILabel = {
         let lb = UILabel()
-        lb.text = "Opens 09:00"
+//        lb.text = "Opens 09:00"
         lb.textColor = UIColor.mainGray
         lb.font = UIFont(name: "DMSans-Regular", size: 12)
         lb.textAlignment = .left

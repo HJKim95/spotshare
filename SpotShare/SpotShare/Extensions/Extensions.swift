@@ -132,6 +132,19 @@ extension String {
         default: return ""
         }
     }
+    
+    func convertDate() -> String {
+        switch self {
+        case "Monday","월요일": return "월"
+        case "Tuesday","화요일": return "화"
+        case "Wednesday","수요일": return "수"
+        case "Thursday","목요일": return "목"
+        case "Friday", "금요일": return "금"
+        case "Saturday", "토요일": return "토"
+        case "Sunday", "일요일": return "일"
+        default: return ""
+        }
+    }
 }
 
 extension CLLocationCoordinate2D {

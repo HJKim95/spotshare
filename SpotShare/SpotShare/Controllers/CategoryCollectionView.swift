@@ -174,12 +174,17 @@ class CategoryCollectionView: UIViewController, UICollectionViewDelegateFlowLayo
     let arr = ["맛이차이나", "산왕반점", "소고산제일루", "심양", "아빠의양식당", "중화가정", "중화복춘", "진가", "진만두", "징기스", "초마", "한양중식", "항방양꼬치"]
     let testArr = [2.1,3.3,4.5,5.0,2.1,2.3,4.3,2.3,2.4,1.2,1.4,1.5,1.5]
     let toiletArr = ["남녀구분","공용","남녀구분","공용","남녀구분","공용","남녀구분","공용","남녀구분","공용","남녀구분","공용","남녀구분"]
-        
+    let a = ["월","화","수","목","금","토","일"]
+    let b = ["1130","1130","1130","1130","1130","1130","1130"]
+    let c = ["2130","2130","2130","2130","2130","2130","2300"]
+    let d = ["1600","1600","1600","1600","1600","1600","없음"]
+    let e = ["1700","1700","1700","1700","1700","1700","없음"]
+//    월~토 11:30 ~ 16:00, 17:00 ~ 21:30, 일 11:30 ~ 23:00"
     fileprivate func test() {
         // 데이터 추가
-        for i in 0..<arr.count {
-            let ref = Database.database().reference().child("Test").child(arr[i])
-            let values = ["toilet":toiletArr[i]] as [String : Any]
+        for i in 0..<a.count {
+            let ref = Database.database().reference().child("맛집").child("맛이차이나").child("open")
+            let values = [a[i]:b[i]] as [String : Any]
             ref.updateChildValues(values)
         }
         
@@ -242,14 +247,16 @@ class CategoryCollectionView: UIViewController, UICollectionViewDelegateFlowLayo
         // https://stackoverflow.com/questions/28866865/changing-constraint-after-adding-it-causes-constraint-error-swift
         dropDownHeightConstraint = NSLayoutConstraint(item:dropDownCollectionview, attribute: .height, relatedBy: .equal, toItem: nil, attribute: .notAnAttribute, multiplier:1.0, constant:0)
         dropDownCollectionview.addConstraint(dropDownHeightConstraint)
+        
+        let selectedIndexPath = NSIndexPath(item: 0, section: 0)
+        innerCategoryFilterview.selectItem(at: selectedIndexPath as IndexPath, animated: false, scrollPosition: [])
     }
     
     @objc fileprivate func goBack() {
         self.navigationController?.popViewController(animated: true)
     }
     
-    let filterNames = ["Top rating", "Now Open", "Liked", "A to Z", "Seperate Toilet"]
-    let filterSizes = [106, 109, 76, 80, 138]
+    let filterNames = ["A to Z","Top rating", "Now Open", "Seperate Toilet", "Liked"]
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         if collectionView == innerCategoryFilterview {
@@ -258,12 +265,13 @@ class CategoryCollectionView: UIViewController, UICollectionViewDelegateFlowLayo
             cell.layer.masksToBounds = true
             
             let filterName = filterNames[indexPath.item]
-            let attributedString = NSMutableAttributedString(string: filterName)
-            //letter spacing -0.1
-            attributedString.addAttribute(NSAttributedString.Key.kern, value: CGFloat(-0.1), range: NSRange(location: 0, length: attributedString.length))
-            
+
             cell.filterImageView.image = UIImage(named: filterName)?.withRenderingMode(.alwaysTemplate)
-            cell.filterLabel.attributedText = attributedString
+            cell.filterLabel.letterSpacing(text: filterName, spacing: -0.1)
+            if indexPath.item == 0 {
+                // 이렇게 해도 처음엔 didSelect가 호출되지 않음.
+//                cell.isSelected = true
+            }
             return cell
         }
         else if collectionView == dropDownCollectionview {
@@ -293,6 +301,7 @@ class CategoryCollectionView: UIViewController, UICollectionViewDelegateFlowLayo
         }
     }
     
+    
     @objc func goRestaurant(resInfo: ResInfoModel) {
         let restaurant = RestaurantViewController()
         restaurant.resinfo = resInfo
@@ -319,6 +328,7 @@ class CategoryCollectionView: UIViewController, UICollectionViewDelegateFlowLayo
     }
     
     
+    
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         if collectionView == innerCategoryFilterview {
             return filterNames.count
@@ -342,8 +352,14 @@ class CategoryCollectionView: UIViewController, UICollectionViewDelegateFlowLayo
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         if collectionView == innerCategoryFilterview {
-            let customWidth = filterSizes[indexPath.item]
-            return CGSize(width: customWidth, height: 32)
+            let frame = CGRect(x: 0, y: 0, width:  1000, height: 32)
+            let dummyCell = CategoryFilterCell(frame: frame)
+            let filterName = filterNames[indexPath.item]
+            dummyCell.filterLabel.letterSpacing(text: filterName, spacing: -0.1)
+            dummyCell.layoutIfNeeded()
+
+            let textWidth = dummyCell.filterLabel.sizeThatFits(dummyCell.filterLabel.frame.size).width
+            return CGSize(width: textWidth + 32 + 10, height: 32)
         }
             
         else if collectionView == dropDownCollectionview {
@@ -390,9 +406,11 @@ class CategoryCollectionView: UIViewController, UICollectionViewDelegateFlowLayo
         
     }
     
+//    var topRatingReverse: Bool = false
+    
+    
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         if collectionView == dropDownCollectionview {
-            
             var selectedCategory = ""
             if category == "한식" {
                 selectedCategory = resCategories[indexPath.item]
@@ -407,7 +425,26 @@ class CategoryCollectionView: UIViewController, UICollectionViewDelegateFlowLayo
             cell.category = searchText.text ?? "한식"
             chooseCategory()
         }
+        
+        let index = IndexPath(item: 0, section: 0)
+        
+        guard let categoryCell = innerCategoryCollectionview.cellForItem(at: index) as? CategoryListCell else {return}
+        // 임시방편
+        let location = CLLocationCoordinate2D(latitude: 37.551597, longitude: 126.924976)
+        if collectionView == innerCategoryFilterview {
+            let filterName = filterNames[indexPath.item]
+            if filterName == "Top rating" {
+                categoryCell.testCategory_firebase(category: category ?? "Test", location: location, orderChild: "points", reverse: true)
+            }
+            else if filterName == "A to Z" {
+                categoryCell.testCategory_firebase(category: category ?? "Test", location: location, orderChild: "resName", reverse: false)
+            }
+            else if filterName == "Seperate Toilet" {
+                categoryCell.testCategory_firebase(category: category ?? "Test", location: location, orderChild: "toilet", reverse: true)
+            }
+        }
     }
+    
 }
 
 class dropDownCell: UICollectionViewCell {
@@ -479,6 +516,7 @@ class CategoryFilterCell: UICollectionViewCell {
         let lb = UILabel()
         lb.font = UIFont(name: "DMSans-Regular", size: 14)
         lb.textColor = .white
+        lb.textAlignment = .left
         return lb
     }()
     
@@ -520,6 +558,7 @@ class CategoryFilterCell: UICollectionViewCell {
         filterLabelConstraint = filterLabel.anchor(self.topAnchor, left: filterImageView.rightAnchor, bottom: nil, right: self.rightAnchor, topConstant: 7, leftConstant: 6, bottomConstant: 0, rightConstant: 0, widthConstant: 0, heightConstant: 18).first
         
     }
+
 }
 
 class CategoryListCell: UICollectionViewCell, UICollectionViewDelegateFlowLayout, UICollectionViewDelegate, UICollectionViewDataSource, CLLocationManagerDelegate {
@@ -533,7 +572,7 @@ class CategoryListCell: UICollectionViewCell, UICollectionViewDelegateFlowLayout
         didSet {
             // 임시방편
             let location = CLLocationCoordinate2D(latitude: 37.551597, longitude: 126.924976)
-            testCategory_firebase(category: category ?? "Test", location: location)
+            testCategory_firebase(category: category ?? "Test", location: location, orderChild: "resName", reverse: false)
             locationManager.delegate = self
             locationManager.requestWhenInUseAuthorization()
             locationManager.desiredAccuracy = kCLLocationAccuracyBest
@@ -560,8 +599,6 @@ class CategoryListCell: UICollectionViewCell, UICollectionViewDelegateFlowLayout
     override init(frame: CGRect) {
         super.init(frame: frame)
         setupLayouts()
-        
-        
     }
     
     required init?(coder: NSCoder) {
@@ -661,182 +698,117 @@ class CategoryListCell: UICollectionViewCell, UICollectionViewDelegateFlowLayout
     var checkCategory: String?
     var finishedPaging = false
     
+    
+    
+    // test
     var testAllObject = [String]()
     var testCount = 6
-    fileprivate func testCategory_firebase(category: String, location: CLLocationCoordinate2D) {
+    var saveChild: String = "resName"
+    
+    fileprivate func testCategory_firebase(category: String, location: CLLocationCoordinate2D, orderChild: String, reverse: Bool) {
         let ref = Database.database().reference().child(category)
-        var query = ref.queryOrdered(byChild: "toilet")
-        // value로 해야 first children의 count 총합을 구할수있다.
+        let query = ref.queryOrdered(byChild: orderChild)
         
         var snapshotCount = 0
-        
+        if self.saveChild != orderChild {
+            self.testAllObject.removeAll()
+            self.resInfos.removeAll()
+        }
+        // value로 해야 first children의 count 총합을 구할수있다.
         query.observeSingleEvent(of: .value) { (snapshot) in
             snapshotCount = snapshot.children.allObjects.count
             query.observe(.childAdded, with: { [weak self] (snapshot) in
-                    self?.testAllObject.append(snapshot.key)
-                    if snapshotCount == self?.testAllObject.count {
-                        // 여기서 pagination을 추후 적용하면 된다.
-                        for i in self?.testAllObject ?? [""] {
-                            let resReference = Database.database().reference().child("맛집").child(i)
-                            resReference.observeSingleEvent(of: .value, with: { [weak self] (snapshot) in
-                                if let dictionary = snapshot.value as? [String:Any] {
-                                    let resmodel = ResInfoModel()
-                                    
-                                    resmodel.resName = dictionary["resName"] as? String
-                                    resmodel.starPoint = dictionary["resPoints"] as? Double
-                                    guard let lat = (dictionary["lat"] as? CLLocationDegrees) else {return}
-                                    guard let long = (dictionary["long"] as? CLLocationDegrees) else {return}
-                                    resmodel.resLocation = CLLocationCoordinate2D(latitude: lat, longitude: long)
-                                    resmodel.distance = location.distance(from: CLLocationCoordinate2D(latitude: lat, longitude: long))
-                                    resmodel.locationText = (dictionary["location"] as? String)
-                                    resmodel.toilet = dictionary["toilet"] as? String
-                                    
-                                    
-            //                             해당 맛집에서 첫번째 이미지 따오기.
-                                    let firstImageReference = Database.database().reference().child("맛집").child(i).child("FirstResimage")
-                                    firstImageReference.observeSingleEvent(of: .childAdded, with: { (snapshot) in
-                                        if let dictionary = snapshot.value as? [String:Any] {
-                                            resmodel.resImageUrl = dictionary["url"] as? String
-                                            
-                                        }
-                                    })
-                                    
-                                    // 해당 맛집에서 hashtag 따오기
-            //                            let ref = Database.database().reference().child("맛집").child(i).child("hashTag")
-            //                            ref.observeSingleEvent(of: .value) { (snapshot) in
-            //                                if let dictionary = snapshot.value as? [String:Any] {
-            //                                    // 만약 hashTag가 DB에 없다면 결국 최종 append가 안된다고 생각.
-            //                                    resmodel.hash1 = dictionary["hash1"] as? String ?? ""
-            //                                    resmodel.hash2 = dictionary["hash2"] as? String ?? ""
-            //                                    resmodel.hash3 = dictionary["hash3"] as? String ?? ""
-            //                                    resmodel.hash4 = dictionary["hash4"] as? String ?? ""
-            //                                    resmodel.hash5 = dictionary["hash5"] as? String ?? ""
-            //                                }
-            //                            }
+                self?.saveChild = orderChild
+                self?.testAllObject.append(snapshot.key)
+                if snapshotCount == self?.testAllObject.count {
+                    if reverse { self?.testAllObject.reverse() }
+                    // 여기서 pagination을 추후 적용하면 된다.
+                    for i in self?.testAllObject ?? [""] {
+                        let resReference = Database.database().reference().child("맛집").child(i)
+                        resReference.observeSingleEvent(of: .value, with: { [weak self] (snapshot) in
+                            if let dictionary = snapshot.value as? [String:Any] {
+                                let resmodel = ResInfoModel()
+                                
+                                resmodel.resName = dictionary["resName"] as? String
+                                resmodel.starPoint = dictionary["resPoints"] as? Double
+                                guard let lat = (dictionary["lat"] as? CLLocationDegrees) else {return}
+                                guard let long = (dictionary["long"] as? CLLocationDegrees) else {return}
+                                resmodel.resLocation = CLLocationCoordinate2D(latitude: lat, longitude: long)
+                                resmodel.distance = location.distance(from: CLLocationCoordinate2D(latitude: lat, longitude: long))
+                                resmodel.locationText = (dictionary["location"] as? String)
+                                resmodel.toilet = dictionary["toilet"] as? String
+                                
+                                // 해당 요일에 오픈 시간들 받아오기
+                                // 오늘이 무슨 요일인지 부터 시작하면 됨!!
+                                let openReference = Database.database().reference().child("맛집").child(i).child("open").child(self?.getWeekDate() ?? "")
+                                openReference.observeSingleEvent(of: .value) { (snapshot) in
+                                    if let value = snapshot.value {
+                                        resmodel.open = value as? String
+                                    }
+                                }
+//                                resmodel.open = dictionary["open"] as? String
+//                                resmodel.close = dictionary["close"] as? String
+//                                resmodel.breakStart = dictionary["breakStart"] as? String
+//                                resmodel.breakFinish = dictionary["breakFinish"] as? String
+                                
+        //                             해당 맛집에서 첫번째 이미지 따오기.
+                                let firstImageReference = Database.database().reference().child("맛집").child(i).child("FirstResimage")
+                                firstImageReference.observeSingleEvent(of: .childAdded, with: { (snapshot) in
+                                    if let dictionary = snapshot.value as? [String:Any] {
+                                        resmodel.resImageUrl = dictionary["url"] as? String
+                                        
+                                    }
+                                })
+                                
+//                                 해당 맛집에서 hashtag 따오기
+                                let ref = Database.database().reference().child("맛집").child(i).child("hashTag")
+                                ref.observeSingleEvent(of: .value) { (snapshot) in
+                                    if let dictionary = snapshot.value as? [String:Any] {
+                                        // 만약 hashTag가 DB에 없다면 결국 최종 append가 안된다고 생각.
+                                        resmodel.hash1 = dictionary["hash1"] as? String ?? ""
+                                        resmodel.hash2 = dictionary["hash2"] as? String ?? ""
+                                        resmodel.hash3 = dictionary["hash3"] as? String ?? ""
+                                        resmodel.hash4 = dictionary["hash4"] as? String ?? ""
+                                        resmodel.hash5 = dictionary["hash5"] as? String ?? ""
+                                    }
+                                }
 
-                                    self?.resInfos.append(resmodel)
-                                    self?.categoryResInfos[category] = self?.resInfos
-                                    self?.checkCategory = category
-                                    self?.countInfo += 1
-                                    self?.indexInfo += 1
-                                    if self?.countInfo == self?.checkCount {
-            //                                self?.finishedPaging = true
-                                    }
-                                    else {
-            //                                self?.finishedPaging = false
-                                    }
+                                self?.resInfos.append(resmodel)
+                                self?.categoryResInfos[category] = self?.resInfos
+                                self?.checkCategory = category
+                                self?.countInfo += 1
+                                self?.indexInfo += 1
+                                if self?.countInfo == self?.checkCount {
+        //                                self?.finishedPaging = true
                                 }
-                                DispatchQueue.main.async {
-                                    self?.innerCategoryCollectionview.reloadData()
+                                else {
+        //                                self?.finishedPaging = false
                                 }
-                            }) { (err) in
-                                print("Failed to fetch resData:", err)
                             }
+                            DispatchQueue.main.async {
+                                self?.innerCategoryCollectionview.reloadData()
+                            }
+                        }) { (err) in
+                            print("Failed to fetch resData:", err)
                         }
                     }
+                }
                 }) { (err) in
                     print("@@@Failed to fetch resData_AllObject:", err)
                 }
         }
         
-        
     }
     
-    fileprivate func getCategory_firebase(category: String, location: CLLocationCoordinate2D) {
-        let ref = Database.database().reference().child(category)
-//        var query = ref.queryOrderedByKey()
-        //테스트용
-        var query = ref.queryOrdered(byChild: "toilet")
-        if allobject.count > 0 {
-            
-            if self.checkCategory != category {
-                self.resInfos.removeAll()
-                self.indexInfo = 0
-                self.checkCount = 14
-            }
-            
-            else {
-                let value = allobject.last
-                query = query.queryStarting(atValue: value)
-                checkCount = 13
-            }
-            
-        }
-        
-        allobject.removeAll()
-        
-        self.countInfo = 0
-        query.queryLimited(toFirst: 14).observe(.childAdded, with: { [weak self] (snapshot) in
-            self?.allobject.append(snapshot.key)
-            if self?.allobject.count == self?.fetchCount {
-                if self?.resInfos.count ?? -1 > 0 {
-//                    self?.allobject.removeFirst()
-                }
-                
-                for i in self?.allobject ?? [""] {
-                    let resReference = Database.database().reference().child("맛집").child(i)
-                    resReference.observeSingleEvent(of: .value, with: { [weak self] (snapshot) in
-                        if let dictionary = snapshot.value as? [String:Any] {
-                            let resmodel = ResInfoModel()
-                            
-                            resmodel.resName = dictionary["resName"] as? String
-                            resmodel.starPoint = dictionary["resPoints"] as? Double
-                            guard let lat = (dictionary["lat"] as? CLLocationDegrees) else {return}
-                            guard let long = (dictionary["long"] as? CLLocationDegrees) else {return}
-                            resmodel.resLocation = CLLocationCoordinate2D(latitude: lat, longitude: long)
-                            resmodel.distance = location.distance(from: CLLocationCoordinate2D(latitude: lat, longitude: long))
-                            resmodel.locationText = (dictionary["location"] as? String)
-                            resmodel.toilet = dictionary["toilet"] as? String
-                            
-                            
-//                             해당 맛집에서 첫번째 이미지 따오기.
-                            let firstImageReference = Database.database().reference().child("맛집").child(i).child("FirstResimage")
-                            firstImageReference.observeSingleEvent(of: .childAdded, with: { (snapshot) in
-                                if let dictionary = snapshot.value as? [String:Any] {
-                                    resmodel.resImageUrl = dictionary["url"] as? String
-                                    
-                                }
-                            })
-                            
-                            // 해당 맛집에서 hashtag 따오기
-//                            let ref = Database.database().reference().child("맛집").child(i).child("hashTag")
-//                            ref.observeSingleEvent(of: .value) { (snapshot) in
-//                                if let dictionary = snapshot.value as? [String:Any] {
-//                                    // 만약 hashTag가 DB에 없다면 결국 최종 append가 안된다고 생각.
-//                                    resmodel.hash1 = dictionary["hash1"] as? String ?? ""
-//                                    resmodel.hash2 = dictionary["hash2"] as? String ?? ""
-//                                    resmodel.hash3 = dictionary["hash3"] as? String ?? ""
-//                                    resmodel.hash4 = dictionary["hash4"] as? String ?? ""
-//                                    resmodel.hash5 = dictionary["hash5"] as? String ?? ""
-//                                }
-//                            }
-
-                            self?.resInfos.append(resmodel)
-                            self?.categoryResInfos[category] = self?.resInfos
-                            self?.checkCategory = category
-                            self?.countInfo += 1
-                            self?.indexInfo += 1
-                            if self?.countInfo == self?.checkCount {
-//                                self?.finishedPaging = true
-                            }
-                            else {
-//                                self?.finishedPaging = false
-                            }
-                        }
-                        DispatchQueue.main.async {
-                            self?.innerCategoryCollectionview.reloadData()
-                        }
-                    }) { (err) in
-                        print("Failed to fetch resData:", err)
-                    }
-                }
-                
-            }
-        }) { (err) in
-            print("Failed to fetch 한식Data:", err)
-        }
-        
+    fileprivate func getWeekDate() -> String {
+        let now = Date()
+        let dateFormater = DateFormatter()
+        dateFormater.dateFormat = "EEEE"
+        let today = dateFormater.string(from: now)
+        return today.convertDate()
     }
+    
+    
     
 }
 
