@@ -63,24 +63,12 @@ class RestaurantViewController: UIViewController, UICollectionViewDelegateFlowLa
         view.addSubview(infoCollectionView)
         view.addSubview(myRestaurantBar)
         
-        let barheight = UIApplication.shared.statusBarFrame.height
+//        let barheight = UIApplication.shared.statusBarFrame.height
         let resBarWidth: CGFloat = 210
         
-        if #available(iOS 11.0, *) {
-            
-            
-
-            infoCollectionViewConstraint = infoCollectionView.anchor(view.topAnchor, left: view.leftAnchor, bottom: view.bottomAnchor, right: view.rightAnchor, topConstant: -barheight, leftConstant: 0, bottomConstant: 0, rightConstant: 0, widthConstant: 0, heightConstant: 0).first
-            myRestaurantBarConstraint = myRestaurantBar.anchor(nil, left: view.leftAnchor, bottom: view.bottomAnchor, right: nil, topConstant: 0, leftConstant: (view.frame.width / 2) - (resBarWidth / 2), bottomConstant: 50, rightConstant: 0, widthConstant: resBarWidth, heightConstant: 36).first
-        }
-            
-        else {
-            infoCollectionViewConstraint = infoCollectionView.anchor(view.topAnchor, left: view.leftAnchor, bottom: view.bottomAnchor, right: view.rightAnchor, topConstant: -barheight, leftConstant: 0, bottomConstant: 0, rightConstant: 0, widthConstant: 0, heightConstant: 0).first
-            myRestaurantBarConstraint = myRestaurantBar.anchor(nil, left: view.leftAnchor, bottom: view.bottomAnchor, right: nil, topConstant: 0, leftConstant: (view.frame.width / 2) - (resBarWidth / 2), bottomConstant: 50, rightConstant: 0, widthConstant: resBarWidth, heightConstant: 36).first
-
-        }
-        
-//        blackView.setGradientBackgroundVertical(gradientLayer: gradient, colorOne:UIColor(white: 0, alpha: 0.6), colorTwo: UIColor(white: 0, alpha: 0))
+        infoCollectionViewConstraint = infoCollectionView.anchor(view.topAnchor, left: view.leftAnchor, bottom: view.bottomAnchor, right: view.rightAnchor, topConstant: 0, leftConstant: 0, bottomConstant: 0, rightConstant: 0, widthConstant: 0, heightConstant: 0).first
+        myRestaurantBarConstraint = myRestaurantBar.anchor(nil, left: view.leftAnchor, bottom: view.bottomAnchor, right: nil, topConstant: 0, leftConstant: (view.frame.width / 2) - (resBarWidth / 2), bottomConstant: 50, rightConstant: 0, widthConstant: resBarWidth, heightConstant: 36).first
+        //        blackView.setGradientBackgroundVertical(gradientLayer: gradient, colorOne:UIColor(white: 0, alpha: 0.6), colorTwo: UIColor(white: 0, alpha: 0))
     }
     
     // autolayout 사용시에는 gradient 설정하고 밑에 viewDidLayoutSubviews를 설정해주어야함.
@@ -292,7 +280,8 @@ class bigRestaurantCell: UICollectionViewCell, UICollectionViewDelegateFlowLayou
         if indexPath.item == 0 {
             
 //            let barheight = UIApplication.shared.statusBarFrame.height
-            return CGSize(width: collectionView.frame.width, height: frame.width - 50 + 187 + 12)
+            // 뒤에 +10 은 map과의 여백
+            return CGSize(width: collectionView.frame.width, height: frame.width - 50 + 188 + 10)
         }
         else {
             return CGSize(width: collectionView.frame.width, height: 900)
@@ -332,6 +321,7 @@ class bigRestaurantCell: UICollectionViewCell, UICollectionViewDelegateFlowLayou
     func goImproveListing() {
         delegate?.goImproveListing()
     }
+
     
 }
 

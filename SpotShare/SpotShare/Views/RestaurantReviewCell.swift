@@ -93,8 +93,8 @@ class RestaurantReviewCell: UICollectionViewCell, UICollectionViewDelegateFlowLa
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
 
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: cellid, for: indexPath) as! ReviewCell
-        cell.review = reviews[indexPath.item]
-        cell.review2 = reviews2[indexPath.item]
+//        cell.review = reviews[indexPath.item]
+//        cell.review2 = reviews2[indexPath.item]
         
         let imsirating = imsiRating[indexPath.item]
         // letter spacing -0.1
@@ -115,8 +115,8 @@ class RestaurantReviewCell: UICollectionViewCell, UICollectionViewDelegateFlowLa
         // 밑에 frame의 height에 따라 height가 너무 작으면 오류가 나더라.. constraint관련해서
         let frame = CGRect(x: 0, y: 0, width:  (self.frame.width - 48 - 10) / 2, height: 1000)
         let dummyCell = ReviewCell(frame: frame)
-        dummyCell.review = reviews[indexPath.item]
-        dummyCell.review2 = reviews2[indexPath.item]
+//        dummyCell.review = reviews[indexPath.item]
+//        dummyCell.review2 = reviews2[indexPath.item]
         dummyCell.layoutIfNeeded()
         
         let imageRatio = reviews2[indexPath.item].image.size.height / reviews2[indexPath.item].image.size.width

@@ -24,7 +24,7 @@ class ResInfoModel: NSObject {
     var priceText: String?
     var holidayText: String?
     var reservation: String?
-    var distance: String?
+    var distance: Double?
     
     var open: String?
     var close: String?

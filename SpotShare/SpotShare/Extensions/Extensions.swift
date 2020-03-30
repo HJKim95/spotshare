@@ -145,21 +145,17 @@ extension String {
         default: return ""
         }
     }
+    
+    func convertInt() -> Int {
+        return Int(self) ?? 0
+    }
 }
 
 extension CLLocationCoordinate2D {
     //distance in meters, as explained in CLLoactionDistance definition
-    func distance(from: CLLocationCoordinate2D) -> String {
+    func distance(from: CLLocationCoordinate2D) -> Double {
         let destination = CLLocation(latitude:from.latitude,longitude:from.longitude)
         let distance = CLLocation(latitude: latitude, longitude: longitude).distance(from: destination).rounded()
-        var distanceString = ""
-        if distance < 1000 {
-            distanceString = String(format: "%.0f", distance) + "m"
-        }
-        else {
-            let kmDistance = distance / 1000
-            distanceString = String(format: "%.0f", kmDistance) + "km"
-        }
-        return distanceString
+        return distance
     }
 }

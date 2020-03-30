@@ -9,6 +9,8 @@
 import UIKit
 import collection_view_layouts
 import Cosmos
+import Firebase
+import GoogleMaps
 
 // https://github.com/rubygarage/collection-view-layouts
 // https://github.com/evgenyneu/Cosmos
@@ -18,8 +20,6 @@ class ReviewController: UIViewController, UICollectionViewDelegateFlowLayout, UI
     deinit {
         print("no retain cycle in ReviewController")
     }
-    
-    
     
     fileprivate let cellid = "cellid"
     fileprivate let headerid = "headerid"
@@ -99,17 +99,17 @@ class ReviewController: UIViewController, UICollectionViewDelegateFlowLayout, UI
         self.navigationController?.delegate = self
         
         
-        for text in texts {
-            let review = Review(text: text)
-            self.reviews.append(review)
-        }
-        for image in images2 {
-            let image = Review2(image: image)
-            self.reviews2.append(image)
-        }
+//        for text in texts {
+//            let review = Review(text: text)
+//            self.reviews.append(review)
+//        }
+//        for image in images2 {
+//            let image = Review2(image: image)
+//            self.reviews2.append(image)
+//        }
 
         setupLayouts()
-        
+        getReview_firebase()
     }
     
     var backImageViewConstraint: NSLayoutConstraint?
@@ -148,24 +148,111 @@ class ReviewController: UIViewController, UICollectionViewDelegateFlowLayout, UI
     }
     
     
+    var reviewinfos = [ReviewModel]()
+
+    var AllObject = [String]()
+    var testCount = 6
+    var saveChild: String = "resName"
     
-    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return texts.count
+    fileprivate func getReview_firebase() {
+        print("Start paging for more posts")
+        let ref = Database.database().reference().child("messages")
+        var query = ref.queryOrdered(byChild: "time")
+        if reviewinfos.count > 0 {
+//            let value = reviewinfos.last?.time
+//            query = query.queryEnding(atValue: value)
+        }
+        query.queryLimited(toLast: 6).observeSingleEvent(of: .value, with: { [weak self] (snapshot) in
+            guard var allObjects = snapshot.children.allObjects as? [DataSnapshot] else { return }
+            allObjects.reverse()
+            
+            if allObjects.count < 6 {
+//                self.isFinishedPaging = true
+            }
+            
+            if self?.reviewinfos.count ?? 0 > 0 && allObjects.count > 0 {
+                allObjects.removeFirst()
+                    
+            }
+            
+            allObjects.forEach({ [weak self] (snapshot) in
+                if let dictionary = snapshot.value as? [String:Any] {
+                    
+                    let review = ReviewModel()
+                    review.reviewId = dictionary["id"] as? String
+                    review.reviewName = dictionary["name"] as? String
+                    review.reviewResName = dictionary["resName"] as? String
+                    review.starPoint = dictionary["points"] as? Double
+                    review.reviewText = dictionary["text"] as? String
+                    review.reviewProfUrl = dictionary["profUrl"] as? String
+                    review.reviewImageUrl = dictionary["resImageUrl"] as? String
+                    review.reviewTime = dictionary["time"] as? NSNumber
+                    
+
+                    self?.reviewinfos.append(review)
+
+                    DispatchQueue.main.async {
+                        self?.reviewCollectionView.reloadData()
+                    }
+
+                }
+            })
+            
+        }) { (error) in
+    
+            print("observing reviews occurred error ",error)
+            
+        }
+        
+        
     }
     
+    
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        return reviewinfos.count
+    }
+    
+    var aspectRatioConstraint: NSLayoutConstraint?
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
 
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: cellid, for: indexPath) as! ReviewCell
-        cell.review = reviews[indexPath.item]
-        cell.review2 = reviews2[indexPath.item]
+        let reviewInfo = reviewinfos[indexPath.item]
         
-        let imsirating = imsiRating[indexPath.item]
-        // letter spacing -0.1
-        let attributedString = NSMutableAttributedString(string: "\(imsirating)")
+        //letter spacing -0.1
+        let attributedString = NSMutableAttributedString(string: reviewInfo.reviewText ?? "")
+        let mutableParagraphStyle = NSMutableParagraphStyle()
+        // line spacing 7
+        mutableParagraphStyle.lineSpacing = 7
         attributedString.addAttribute(NSAttributedString.Key.kern, value: CGFloat(-0.1), range: NSRange(location: 0, length: attributedString.length))
-        cell.starPoint.attributedText = attributedString
-        cell.cosmosView.rating = imsirating
+        let stringLength = reviewInfo.reviewText?.count ?? 0
+        attributedString.addAttribute(NSAttributedString.Key.paragraphStyle, value: mutableParagraphStyle, range: NSMakeRange(0, stringLength))
+        cell.postLabel.attributedText = attributedString
+        
+        if let urlString = reviewInfo.reviewImageUrl {
+            let url = URL(string: urlString)
+            cell.foodImageView.sd_setImage(with: url) { [weak self] (image, err, SDImageCacheType, URL) in
+                guard let imageSize = image?.size else {return}
+//                foodImageView.image = review2.image
+                // https://www.raywenderlich.com/1169-easier-auto-layout-coding-constraints-in-ios-9
+                let ratio = imageSize.height / imageSize.width
+//                self?.aspectRatioConstraint?.isActive = false
+                self?.aspectRatioConstraint = cell.foodImageView.heightAnchor.constraint(equalTo: cell.foodImageView.widthAnchor, multiplier: ratio, constant: 0)
+                self?.aspectRatioConstraint?.isActive = true
+//                cell.sizeThatFits(<#T##size: CGSize##CGSize#>)
+            }
+        }
+        
+//        cell.review = reviews[indexPath.item]
+//        cell.review2 = reviews2[indexPath.item]
+//
+//        let imsirating = imsiRating[indexPath.item]
+//        // letter spacing -0.1
+//        let attributedString = NSMutableAttributedString(string: "\(imsirating)")
+//        attributedString.addAttribute(NSAttributedString.Key.kern, value: CGFloat(-0.1), range: NSRange(location: 0, length: attributedString.length))
+//        cell.starPoint.attributedText = attributedString
+//        cell.cosmosView.rating = imsirating
+        
         
 //        cell.foodImageView.heightAnchor.constraint(equalToConstant: image).isActive = true
 
@@ -178,18 +265,35 @@ class ReviewController: UIViewController, UICollectionViewDelegateFlowLayout, UI
         // 변수 height(사진, text
         // 밑에 frame의 height에 따라 height가 너무 작으면 오류가 나더라.. constraint관련해서
         let frame = CGRect(x: 0, y: 0, width:  (view.frame.width - 48 - 10) / 2, height: 1000)
+        let cellWidth = (view.frame.width - 48 - 10) / 2
         let dummyCell = ReviewCell(frame: frame)
-        dummyCell.review = reviews[indexPath.item]
-        dummyCell.review2 = reviews2[indexPath.item]
-        dummyCell.layoutIfNeeded()
         
-        let imageRatio = reviews2[indexPath.item].image.size.height / reviews2[indexPath.item].image.size.width
-        let imageHeight = imageRatio * (view.frame.width - 48 - 10) / 2
+        let reviewInfo = reviewinfos[indexPath.item]
+        
+        //letter spacing -0.1
+        let attributedString = NSMutableAttributedString(string: reviewInfo.reviewText ?? "")
+        let mutableParagraphStyle = NSMutableParagraphStyle()
+        // line spacing 7
+        mutableParagraphStyle.lineSpacing = 7
+        attributedString.addAttribute(NSAttributedString.Key.kern, value: CGFloat(-0.1), range: NSRange(location: 0, length: attributedString.length))
+        let stringLength = reviewInfo.reviewText?.count ?? 0
+        attributedString.addAttribute(NSAttributedString.Key.paragraphStyle, value: mutableParagraphStyle, range: NSMakeRange(0, stringLength))
+        dummyCell.postLabel.attributedText = attributedString
+        
+        var imageHeight: CGFloat = 0.0
+        if let urlString = reviewInfo.reviewImageUrl {
+            let url = URL(string: urlString)
+            dummyCell.foodImageView.sd_setImage(with: url) { (image, err, SDImageCacheType, URL) in
+                guard let imageSize = image?.size else {return}
+                // https://www.raywenderlich.com/1169-easier-auto-layout-coding-constraints-in-ios-9
+                let ratio: CGFloat = imageSize.height / imageSize.width
+            }
+        }
+        dummyCell.layoutIfNeeded()
         
         let textHeight = dummyCell.postLabel.sizeThatFits(dummyCell.postLabel.frame.size).height
         
-        
-        return CGSize(width: (view.frame.width - 48 - 10) / 2, height: 123 + imageHeight + textHeight)
+        return CGSize(width: (view.frame.width - 48 - 10) / 2, height: 123 + 159 + textHeight + 10)
     }
     
     @objc fileprivate func goBack() {
@@ -287,35 +391,14 @@ class ReviewController: UIViewController, UICollectionViewDelegateFlowLayout, UI
 
 class ReviewCell: UICollectionViewCell {
     
-    var review: Review? {
-        didSet {
-            guard let review = review else { return }
-            //letter spacing -0.1
-            let attributedString = NSMutableAttributedString(string: review.text)
-            let mutableParagraphStyle = NSMutableParagraphStyle()
-            // line spacing 7
-            mutableParagraphStyle.lineSpacing = 7
-            attributedString.addAttribute(NSAttributedString.Key.kern, value: CGFloat(-0.1), range: NSRange(location: 0, length: attributedString.length))
-            let stringLength = review.text.count
-            attributedString.addAttribute(NSAttributedString.Key.paragraphStyle, value: mutableParagraphStyle, range: NSMakeRange(0, stringLength))
-            
-            postLabel.attributedText = attributedString
-        }
-    }
     
-    var aspectRatioConstraint: NSLayoutConstraint?
     
-    var review2: Review2? {
-        didSet {
-            guard let review2 = review2 else { return }
-            foodImageView.image = review2.image
-            // https://www.raywenderlich.com/1169-easier-auto-layout-coding-constraints-in-ios-9
-            let ratio = review2.image.size.height / review2.image.size.width
-            aspectRatioConstraint?.isActive = false
-            aspectRatioConstraint = foodImageView.heightAnchor.constraint(equalTo: foodImageView.widthAnchor, multiplier: ratio, constant: 0)
-            aspectRatioConstraint?.isActive = true
-        }
-    }
+//    var review2: Review2? {
+//        didSet {
+//            guard let review2 = review2 else { return }
+//
+//        }
+//    }
 
     
     let userImageView: UIImageView = {

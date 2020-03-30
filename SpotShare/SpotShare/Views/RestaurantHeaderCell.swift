@@ -45,10 +45,35 @@ class RestaurantHeaderCell: UICollectionViewCell, UICollectionViewDelegateFlowLa
             hashtagArray.append(resinfo?.hash5 ?? "")
             
             guard var open: String = resinfo?.open else {return}
+            guard let close: String = resinfo?.close else {return}
+            
+            let now = Date()
+            let timeFormatter = DateFormatter()
+            timeFormatter.dateFormat = "HHmm"
+            let time = timeFormatter.string(from: now)
+            if time.convertInt() > open.convertInt() && time.convertInt() < close.convertInt() {
+                OpenCloseLabel.text = "Open"
+                OpenCloseLabel.textColor = .mainGray
+            }
+            else {
+                OpenCloseLabel.text = "Closed"
+                OpenCloseLabel.textColor = UIColor.red.withAlphaComponent(0.7)
+            }
+
             // open 값만 현재 받아와서 보여줬음. 이제 이후로 close값 받아오고 지금 open인지 여부도 확인하고 open누르면 요일마다 시간나오게 하고 그러면 됨.
             let index = open.index(open.startIndex, offsetBy: 2)
             open.insert(":", at: index)
             openTimeLabel.text = "Opens \(open)"
+            
+            
+            // 사람의 걸음걸이 속도 3.6km/h 로 정함.(네이버)
+            // ==> 60m/min
+            if let distance = resinfo?.distance {
+                let speed = distance / 60
+                let speedText = String(format: "%.0f", speed)
+                distanceLabel.text = speedText + " min walk"
+                distanceLabel.adjustsFontSizeToFitWidth = true
+            }
         }
     }
     
@@ -115,7 +140,6 @@ class RestaurantHeaderCell: UICollectionViewCell, UICollectionViewDelegateFlowLa
     
     let distanceLabel: UILabel = {
         let lb = UILabel()
-        lb.text = "14 min walk"
         lb.textColor = UIColor.mainGray
         lb.font = UIFont(name: "DMSans-Regular", size: 12)
         lb.textAlignment = .left
@@ -137,12 +161,12 @@ class RestaurantHeaderCell: UICollectionViewCell, UICollectionViewDelegateFlowLa
         return lb
     }()
     
-    let OpenCloseLabel: UILabel = {
+    lazy var OpenCloseLabel: UILabel = {
         let lb = UILabel()
-        lb.text = "Closed"
-        lb.textColor = UIColor.mainGray
         lb.font = UIFont(name: "DMSans-Regular", size: 12)
         lb.textAlignment = .left
+        lb.isUserInteractionEnabled = true
+        lb.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(showTime)))
         return lb
     }()
     
@@ -294,6 +318,14 @@ class RestaurantHeaderCell: UICollectionViewCell, UICollectionViewDelegateFlowLa
         }, withCancel: { (err) in
             print("Failed to fetch resMonthData:", err)
         })
+    }
+    
+    @objc fileprivate func showTime() {
+        // 추후에 resinfoCell 하고 하나의 cell로 합쳐서 해야됨. (그래야 밑에가 안짤림)
+        // bigresCell 에서 addSubview하게 되면 scroll할때 이상해짐..
+        print("touch openLabel")
+//        let openInfo = ResOpenInfoView(frame: CGRect(x: 24, y: frame.width - 50 + 153 + 20, width: 150, height: 200))
+//        addSubview(openInfo)
     }
 }
 

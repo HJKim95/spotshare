@@ -35,6 +35,8 @@
 		103A40BF2326C57C00F69DDB /* CircularCollectionViewLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 103A40BE2326C57C00F69DDB /* CircularCollectionViewLayout.swift */; };
 		103A40C1232761BC00F69DDB /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 103A40C0232761BC00F69DDB /* Assets.xcassets */; };
 		1044DDCD2379B85900CCFB7D /* RestaurantInfoCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1044DDCC2379B85900CCFB7D /* RestaurantInfoCell.swift */; };
+		1052008624318146005C4107 /* ResOpenInfoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1052008524318146005C4107 /* ResOpenInfoView.swift */; };
+		105200882431AEEA005C4107 /* ReviewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 105200872431AEEA005C4107 /* ReviewModel.swift */; };
 		106C76BD22E4438200F80FEF /* ExploreCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 106C76BC22E4438200F80FEF /* ExploreCell.swift */; };
 		106C76BF22E4499100F80FEF /* WeatherCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 106C76BE22E4499100F80FEF /* WeatherCell.swift */; };
 		106C76C122E44A4D00F80FEF /* RecommendCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 106C76C022E44A4D00F80FEF /* RecommendCell.swift */; };
@@ -107,6 +109,8 @@
 		103A40BE2326C57C00F69DDB /* CircularCollectionViewLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CircularCollectionViewLayout.swift; sourceTree = "<group>"; };
 		103A40C0232761BC00F69DDB /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		1044DDCC2379B85900CCFB7D /* RestaurantInfoCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RestaurantInfoCell.swift; sourceTree = "<group>"; };
+		1052008524318146005C4107 /* ResOpenInfoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResOpenInfoView.swift; sourceTree = "<group>"; };
+		105200872431AEEA005C4107 /* ReviewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewModel.swift; sourceTree = "<group>"; };
 		106C76BC22E4438200F80FEF /* ExploreCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExploreCell.swift; sourceTree = "<group>"; };
 		106C76BE22E4499100F80FEF /* WeatherCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherCell.swift; sourceTree = "<group>"; };
 		106C76C022E44A4D00F80FEF /* RecommendCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecommendCell.swift; sourceTree = "<group>"; };
@@ -254,6 +258,7 @@
 				10BDF473241938EB005F4776 /* WeatherApiHelper.swift */,
 				10BDF475241B4FD7005F4776 /* DustApiHelper.swift */,
 				101759D52427438100DC1794 /* StretchyHeaderLayout.swift */,
+				1052008524318146005C4107 /* ResOpenInfoView.swift */,
 			);
 			path = Helpers;
 			sourceTree = "<group>";
@@ -279,6 +284,7 @@
 				10740DEA23813540001A7C32 /* Review.swift */,
 				101144422410D299005939CB /* MainMagazineModel.swift */,
 				103688EE2410F140006CFF28 /* ResInfoModel.swift */,
+				105200872431AEEA005C4107 /* ReviewModel.swift */,
 				10BDF46F24193819005F4776 /* WeatherModel.swift */,
 				10BDF47124193845005F4776 /* WeatherData.swift */,
 			);
@@ -522,8 +528,10 @@
 				10BDF476241B4FD7005F4776 /* DustApiHelper.swift in Sources */,
 				10BDF47224193845005F4776 /* WeatherData.swift in Sources */,
 				103A40B92324A30400F69DDB /* BottomPopupNavigationController.swift in Sources */,
+				1052008624318146005C4107 /* ResOpenInfoView.swift in Sources */,
 				10EC6463227D91DB005573BE /* SearchController.swift in Sources */,
 				10168F7C232B5538001114FD /* CategoryCollectionView.swift in Sources */,
+				105200882431AEEA005C4107 /* ReviewModel.swift in Sources */,
 				10DCD523227615470005DCD3 /* TabView.swift in Sources */,
 				101144392405079B005939CB /* EditReviewController.swift in Sources */,
 				10114441240E457F005939CB /* MapinfoView.swift in Sources */,

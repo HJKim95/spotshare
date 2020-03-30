@@ -295,6 +295,7 @@ class CategoryCollectionView: UIViewController, UICollectionViewDelegateFlowLayo
             }
             else {
                 let cell = collectionView.dequeueReusableCell(withReuseIdentifier: mapid, for: indexPath) as! CategoryMapCell
+                cell.category = category
                 cell.delegate = self
                 return cell
             }
@@ -434,13 +435,13 @@ class CategoryCollectionView: UIViewController, UICollectionViewDelegateFlowLayo
         if collectionView == innerCategoryFilterview {
             let filterName = filterNames[indexPath.item]
             if filterName == "Top rating" {
-                categoryCell.testCategory_firebase(category: category ?? "Test", location: location, orderChild: "points", reverse: true)
+                categoryCell.getCategory_firebase(category: category ?? "Test", location: location, orderChild: "points", reverse: true)
             }
             else if filterName == "A to Z" {
-                categoryCell.testCategory_firebase(category: category ?? "Test", location: location, orderChild: "resName", reverse: false)
+                categoryCell.getCategory_firebase(category: category ?? "Test", location: location, orderChild: "resName", reverse: false)
             }
             else if filterName == "Seperate Toilet" {
-                categoryCell.testCategory_firebase(category: category ?? "Test", location: location, orderChild: "toilet", reverse: true)
+                categoryCell.getCategory_firebase(category: category ?? "Test", location: location, orderChild: "toilet", reverse: true)
             }
         }
     }
@@ -572,7 +573,7 @@ class CategoryListCell: UICollectionViewCell, UICollectionViewDelegateFlowLayout
         didSet {
             // 임시방편
             let location = CLLocationCoordinate2D(latitude: 37.551597, longitude: 126.924976)
-            testCategory_firebase(category: category ?? "Test", location: location, orderChild: "resName", reverse: false)
+            getCategory_firebase(category: category ?? "Test", location: location, orderChild: "resName", reverse: false)
             locationManager.delegate = self
             locationManager.requestWhenInUseAuthorization()
             locationManager.desiredAccuracy = kCLLocationAccuracyBest
@@ -637,7 +638,17 @@ class CategoryListCell: UICollectionViewCell, UICollectionViewDelegateFlowLayout
             }
             cell.toiletLabel.text = resinfo.toilet
             cell.toilet = resinfo.toilet
-            cell.distanceLabel.text = resinfo.distance
+            var distanceString = ""
+            if let distance = resinfo.distance {
+                if distance < 1000.0 {
+                    distanceString = String(format: "%.0f", distance) + "m"
+                }
+                else {
+                    let kmDistance = distance / 1000.0
+                    distanceString = String(format: "%.0f", kmDistance) + "km"
+                }
+            }
+            cell.distanceLabel.text = distanceString
             
             let url = URL(string: resinfo.resImageUrl ?? "")
             cell.resImageView.sd_setImage(with: url, completed: nil)
@@ -701,17 +712,17 @@ class CategoryListCell: UICollectionViewCell, UICollectionViewDelegateFlowLayout
     
     
     // test
-    var testAllObject = [String]()
+    var AllObject = [String]()
     var testCount = 6
     var saveChild: String = "resName"
     
-    fileprivate func testCategory_firebase(category: String, location: CLLocationCoordinate2D, orderChild: String, reverse: Bool) {
+    fileprivate func getCategory_firebase(category: String, location: CLLocationCoordinate2D, orderChild: String, reverse: Bool) {
         let ref = Database.database().reference().child(category)
         let query = ref.queryOrdered(byChild: orderChild)
         
         var snapshotCount = 0
         if self.saveChild != orderChild {
-            self.testAllObject.removeAll()
+            self.AllObject.removeAll()
             self.resInfos.removeAll()
         }
         // value로 해야 first children의 count 총합을 구할수있다.
@@ -719,11 +730,11 @@ class CategoryListCell: UICollectionViewCell, UICollectionViewDelegateFlowLayout
             snapshotCount = snapshot.children.allObjects.count
             query.observe(.childAdded, with: { [weak self] (snapshot) in
                 self?.saveChild = orderChild
-                self?.testAllObject.append(snapshot.key)
-                if snapshotCount == self?.testAllObject.count {
-                    if reverse { self?.testAllObject.reverse() }
+                self?.AllObject.append(snapshot.key)
+                if snapshotCount == self?.AllObject.count {
+                    if reverse { self?.AllObject.reverse() }
                     // 여기서 pagination을 추후 적용하면 된다.
-                    for i in self?.testAllObject ?? [""] {
+                    for i in self?.AllObject ?? [""] {
                         let resReference = Database.database().reference().child("맛집").child(i)
                         resReference.observeSingleEvent(of: .value, with: { [weak self] (snapshot) in
                             if let dictionary = snapshot.value as? [String:Any] {
@@ -739,19 +750,21 @@ class CategoryListCell: UICollectionViewCell, UICollectionViewDelegateFlowLayout
                                 resmodel.toilet = dictionary["toilet"] as? String
                                 
                                 // 해당 요일에 오픈 시간들 받아오기
-                                // 오늘이 무슨 요일인지 부터 시작하면 됨!!
                                 let openReference = Database.database().reference().child("맛집").child(i).child("open").child(self?.getWeekDate() ?? "")
                                 openReference.observeSingleEvent(of: .value) { (snapshot) in
                                     if let value = snapshot.value {
                                         resmodel.open = value as? String
                                     }
                                 }
-//                                resmodel.open = dictionary["open"] as? String
-//                                resmodel.close = dictionary["close"] as? String
-//                                resmodel.breakStart = dictionary["breakStart"] as? String
-//                                resmodel.breakFinish = dictionary["breakFinish"] as? String
                                 
-        //                             해당 맛집에서 첫번째 이미지 따오기.
+                                let closeReference = Database.database().reference().child("맛집").child(i).child("close").child(self?.getWeekDate() ?? "")
+                                closeReference.observeSingleEvent(of: .value) { (snapshot) in
+                                    if let value = snapshot.value {
+                                        resmodel.close = value as? String
+                                    }
+                                }
+
+                                //   해당 맛집에서 첫번째 이미지 따오기.
                                 let firstImageReference = Database.database().reference().child("맛집").child(i).child("FirstResimage")
                                 firstImageReference.observeSingleEvent(of: .childAdded, with: { (snapshot) in
                                     if let dictionary = snapshot.value as? [String:Any] {
@@ -808,12 +821,22 @@ class CategoryListCell: UICollectionViewCell, UICollectionViewDelegateFlowLayout
         return today.convertDate()
     }
     
-    
-    
 }
 
 
 class CategoryMapCell: UICollectionViewCell, GMSMapViewDelegate {
+    
+    var category: String? {
+        didSet {
+            // 임시방편
+            let location = CLLocationCoordinate2D(latitude: 37.551597, longitude: 126.924976)
+            testCategory_firebase(category: category ?? "Test", location: location, orderChild: "resName", reverse: false)
+//            locationManager.delegate = self
+//            locationManager.requestWhenInUseAuthorization()
+//            locationManager.desiredAccuracy = kCLLocationAccuracyBest
+//            locationManager.startUpdatingLocation()
+        }
+    }
     
     weak var delegate: CategoryCollectionView?
     
@@ -844,10 +867,6 @@ class CategoryMapCell: UICollectionViewCell, GMSMapViewDelegate {
     
     let resTitle: UILabel = {
         let lb = UILabel()
-        // letter spacing -0.1
-        let attributedString = NSMutableAttributedString(string: "Cool Restaurant")
-        attributedString.addAttribute(NSAttributedString.Key.kern, value: CGFloat(-0.1), range: NSRange(location: 0, length: attributedString.length))
-        lb.attributedText = attributedString
         lb.font = UIFont(name: "DMSans-Medium", size: 14)
         lb.textAlignment = .left
         lb.numberOfLines = 0
@@ -858,18 +877,6 @@ class CategoryMapCell: UICollectionViewCell, GMSMapViewDelegate {
     let infoLabel: UILabel = {
         let lb = UILabel()
         // https://zeddios.tistory.com/406
-        let attributedString = NSMutableAttributedString(string: "")
-        let seperator = NSTextAttachment()
-        seperator.image = UIImage(named: "time")
-        seperator.bounds = CGRect(x: 0, y: 0, width: 10, height: 10)
-        attributedString.append(NSAttributedString(attachment: seperator))
-        attributedString.append(NSAttributedString(string: " Open "))
-        let locationImage = NSTextAttachment()
-        locationImage.image = UIImage(named: "location")
-        locationImage.bounds = CGRect(x: 0, y: -1, width: 10, height: 10)
-        attributedString.append(NSAttributedString(attachment: locationImage))
-        attributedString.append(NSAttributedString(string: " 5km"))
-        lb.attributedText = attributedString
         lb.sizeToFit()
         lb.font = UIFont(name: "DMSans-Regular", size: 12)
         lb.textColor = UIColor.rgb(red: 68, green: 68, blue: 68)
@@ -880,15 +887,10 @@ class CategoryMapCell: UICollectionViewCell, GMSMapViewDelegate {
     
     let resPoint: UILabel = {
         let lb = UILabel()
-        // letter spacing 0.0
-        let attributedString = NSMutableAttributedString(string: "4.2")
-        attributedString.addAttribute(NSAttributedString.Key.kern, value: CGFloat(0.0), range: NSRange(location: 0, length: attributedString.length))
-        lb.attributedText = attributedString
         lb.font = UIFont(name: "DMSans-Regular", size: 12)
         lb.textAlignment = .center
         lb.numberOfLines = 0
         lb.textColor = UIColor.rgb(red: 68, green: 68, blue: 68)
-        lb.backgroundColor = .lightGreen
         lb.layer.cornerRadius = 12
         lb.layer.masksToBounds = true
         return lb
@@ -921,8 +923,7 @@ class CategoryMapCell: UICollectionViewCell, GMSMapViewDelegate {
     
     var entireViewConstraint: NSLayoutConstraint?
 
-    
-    var marker = GMSMarker()
+
     var mapview = GMSMapView()
     
     
@@ -937,14 +938,95 @@ class CategoryMapCell: UICollectionViewCell, GMSMapViewDelegate {
         mapview.delegate = self
         entireView = mapview
         
-        marker.position = CLLocationCoordinate2D(latitude: 37.552468, longitude: 126.923139)
-        marker.icon = UIImage(named: "marker_pin")
-        marker.map = mapview
-        
+
         addSubview(entireView)
         entireViewConstraint = entireView.anchor(self.topAnchor, left: self.leftAnchor, bottom: self.bottomAnchor, right: self.rightAnchor, topConstant: 0, leftConstant: 0, bottomConstant: 0, rightConstant: 0, widthConstant: 0, heightConstant: 0).first
     }
+    
+    fileprivate func setupMarkers(location: CLLocationCoordinate2D, markerData: ResInfoModel) {
+        let marker = GMSMarker(position: location)
+        marker.map = mapview
+        marker.icon = UIImage(named: "marker_pin")
+        marker.userData = markerData
+    }
 
+    var resInfos = [ResInfoModel]()
+    
+    // test
+    var testAllObject = [String]()
+    var testCount = 6
+    var saveChild: String = "resName"
+    
+    fileprivate func testCategory_firebase(category: String, location: CLLocationCoordinate2D, orderChild: String, reverse: Bool) {
+        let ref = Database.database().reference().child(category)
+        let query = ref.queryOrdered(byChild: orderChild)
+        
+        var snapshotCount = 0
+        if self.saveChild != orderChild {
+            self.testAllObject.removeAll()
+            self.resInfos.removeAll()
+        }
+        // value로 해야 first children의 count 총합을 구할수있다.
+        query.observeSingleEvent(of: .value) { (snapshot) in
+            snapshotCount = snapshot.children.allObjects.count
+            query.observe(.childAdded, with: { [weak self] (snapshot) in
+                self?.saveChild = orderChild
+                self?.testAllObject.append(snapshot.key)
+                if snapshotCount == self?.testAllObject.count {
+                    if reverse { self?.testAllObject.reverse() }
+                    // 여기서 pagination을 추후 적용하면 된다.
+                    for i in self?.testAllObject ?? [""] {
+                        let resReference = Database.database().reference().child("맛집").child(i)
+                        resReference.observeSingleEvent(of: .value, with: { [weak self] (snapshot) in
+                            if let dictionary = snapshot.value as? [String:Any] {
+                                let resmodel = ResInfoModel()
+                                
+                                resmodel.resName = dictionary["resName"] as? String
+                                resmodel.starPoint = dictionary["resPoints"] as? Double
+                                guard let lat = (dictionary["lat"] as? CLLocationDegrees) else {return}
+                                guard let long = (dictionary["long"] as? CLLocationDegrees) else {return}
+                                resmodel.resLocation = CLLocationCoordinate2D(latitude: lat, longitude: long)
+                                resmodel.distance = location.distance(from: CLLocationCoordinate2D(latitude: lat, longitude: long))
+                                
+                                // 해당 요일에 오픈 시간들 받아오기
+                                let openReference = Database.database().reference().child("맛집").child(i).child("open").child(self?.getWeekDate() ?? "")
+                                openReference.observeSingleEvent(of: .value) { (snapshot) in
+                                    if let value = snapshot.value {
+                                        resmodel.open = value as? String
+                                    }
+                                }
+                                
+                                let closeReference = Database.database().reference().child("맛집").child(i).child("close").child(self?.getWeekDate() ?? "")
+                                closeReference.observeSingleEvent(of: .value) { (snapshot) in
+                                    if let value = snapshot.value {
+                                        resmodel.close = value as? String
+                                    }
+                                }
+                                
+                                guard let location = resmodel.resLocation else {return}
+                                self?.setupMarkers(location: location, markerData: resmodel)
+                            }
+                            
+                        }) { (err) in
+                            print("Failed to fetch resData:", err)
+                        }
+                    }
+                }
+                }) { (err) in
+                    print("@@@Failed to fetch resData_AllObject:", err)
+                }
+        }
+        
+    }
+
+    fileprivate func getWeekDate() -> String {
+        let now = Date()
+        let dateFormater = DateFormatter()
+        dateFormater.dateFormat = "EEEE"
+        let today = dateFormater.string(from: now)
+        return today.convertDate()
+    }
+    
     // infoWindow에는 autolayout 적용 불가능.
     fileprivate func setupInfoWindow() {
         let width:CGFloat = 143
@@ -974,9 +1056,66 @@ class CategoryMapCell: UICollectionViewCell, GMSMapViewDelegate {
     }
     
     func mapView(_ mapView: GMSMapView, didTap marker: GMSMarker) -> Bool {
+        marker.tracksInfoWindowChanges = true
      return false
      }
     func mapView(_ mapView: GMSMapView, markerInfoWindow marker: GMSMarker) -> UIView? {
+        let data = marker.userData as! ResInfoModel?
+        if data != nil {
+            resTitle.letterSpacing(text: data?.resName ?? "", spacing: -0.1)
+            
+            var distanceString = ""
+            if let distance = data?.distance {
+                if distance < 1000.0 {
+                    distanceString = String(format: "%.0f", distance) + "m"
+                }
+                else {
+                    let kmDistance = distance / 1000.0
+                    distanceString = String(format: "%.0f", kmDistance) + "km"
+                }
+            }
+            
+            let open: String = data?.open ?? "00"
+            let close: String = data?.close ?? "00"
+            
+            let now = Date()
+            let timeFormatter = DateFormatter()
+            timeFormatter.dateFormat = "HHmm"
+            let time = timeFormatter.string(from: now)
+            var openString = ""
+            if time.convertInt() > open.convertInt() && time.convertInt() < close.convertInt() {
+                openString = "Open"
+            }
+            else {
+                openString = "Closed"
+            }
+            
+            let attributedString = NSMutableAttributedString(string: "")
+            let seperator = NSTextAttachment()
+            seperator.image = UIImage(named: "time")
+            seperator.bounds = CGRect(x: 0, y: 0, width: 10, height: 10)
+            attributedString.append(NSAttributedString(attachment: seperator))
+            attributedString.append(NSAttributedString(string: " \(openString) "))
+            let locationImage = NSTextAttachment()
+            locationImage.image = UIImage(named: "location")
+            locationImage.bounds = CGRect(x: 0, y: -1, width: 10, height: 10)
+            attributedString.append(NSAttributedString(attachment: locationImage))
+            attributedString.append(NSAttributedString(string: " \(distanceString)"))
+            infoLabel.attributedText = attributedString
+            
+            let point = data?.starPoint ?? 3.5
+            resPoint.text = "\(String(describing: point))"
+            if point < 3.0 {
+                resPoint.backgroundColor = .pink
+            }
+            else if point < 4 {
+                resPoint.backgroundColor = .wheat
+            }
+            else {
+                resPoint.backgroundColor = .lightGreen
+            }
+        }
+        
      return self.infoWindow
     }
     func mapView(_ mapView: GMSMapView, didTapInfoWindowOf marker: GMSMarker) {

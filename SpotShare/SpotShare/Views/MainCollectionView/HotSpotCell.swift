@@ -177,7 +177,17 @@ class HotSpotCell: UICollectionViewCell, UICollectionViewDelegateFlowLayout, UIC
             }
         cell.toiletLabel.text = resinfo.toilet
         cell.toilet = resinfo.toilet
-        cell.distanceLabel.text = resinfo.distance
+        var distanceString = ""
+        if let distance = resinfo.distance {
+            if distance < 1000.0 {
+                distanceString = String(format: "%.0f", distance) + "m"
+            }
+            else {
+                let kmDistance = distance / 1000.0
+                distanceString = String(format: "%.0f", kmDistance) + "km"
+            }
+        }
+        cell.distanceLabel.text = distanceString
         
         let url = URL(string: resinfo.resImageUrl ?? "")
         cell.resImageView.sd_setImage(with: url, completed: nil)
