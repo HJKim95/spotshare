@@ -233,35 +233,37 @@ class ReviewController: UIViewController, UICollectionViewDelegateFlowLayout, UI
             let url = URL(string: urlString)
             cell.foodImageView.sd_setImage(with: url) { [weak self] (image, err, SDImageCacheType, URL) in
                 guard let imageSize = image?.size else {return}
-//                foodImageView.image = review2.image
                 // https://www.raywenderlich.com/1169-easier-auto-layout-coding-constraints-in-ios-9
                 let ratio = imageSize.height / imageSize.width
 //                self?.aspectRatioConstraint?.isActive = false
                 self?.aspectRatioConstraint = cell.foodImageView.heightAnchor.constraint(equalTo: cell.foodImageView.widthAnchor, multiplier: ratio, constant: 0)
                 self?.aspectRatioConstraint?.isActive = true
-//                cell.sizeThatFits(<#T##size: CGSize##CGSize#>)
             }
         }
         
-//        cell.review = reviews[indexPath.item]
-//        cell.review2 = reviews2[indexPath.item]
-//
-//        let imsirating = imsiRating[indexPath.item]
-//        // letter spacing -0.1
-//        let attributedString = NSMutableAttributedString(string: "\(imsirating)")
-//        attributedString.addAttribute(NSAttributedString.Key.kern, value: CGFloat(-0.1), range: NSRange(location: 0, length: attributedString.length))
-//        cell.starPoint.attributedText = attributedString
-//        cell.cosmosView.rating = imsirating
+        if let userUrlString = reviewInfo.reviewProfUrl {
+            let url = URL(string: userUrlString)
+            cell.userImageView.sd_setImage(with: url, placeholderImage: nil, options: .scaleDownLargeImages, completed: nil)
+        }
         
+        if let userName = reviewInfo.reviewName {
+            if let resName = reviewInfo.reviewResName {
+                // 추후에 두줄로 바꾸자..
+                cell.restaurantLabel.letterSpacing(text: userName + " in " + resName, spacing: -0.1)
+            }
+        }
         
-//        cell.foodImageView.heightAnchor.constraint(equalToConstant: image).isActive = true
+        if let point = reviewInfo.starPoint {
+            cell.cosmosView.rating = point
+            cell.starPoint.letterSpacing(text: "\(point)", spacing: -0.1)
+        }
 
         return cell
     }
     
     
     func cellSize(indexPath: IndexPath) -> CGSize {
-        // 고정 height = 36 + 12 + 13 + 20 + 5 + 11 + 16 = 113 + 10(여유분)
+        // 고정 height = 36 + 12 + 13 + 20 + 5 + 11 + 16 = 113
         // 변수 height(사진, text
         // 밑에 frame의 height에 따라 height가 너무 작으면 오류가 나더라.. constraint관련해서
         let frame = CGRect(x: 0, y: 0, width:  (view.frame.width - 48 - 10) / 2, height: 1000)
@@ -280,20 +282,12 @@ class ReviewController: UIViewController, UICollectionViewDelegateFlowLayout, UI
         attributedString.addAttribute(NSAttributedString.Key.paragraphStyle, value: mutableParagraphStyle, range: NSMakeRange(0, stringLength))
         dummyCell.postLabel.attributedText = attributedString
         
-        var imageHeight: CGFloat = 0.0
-        if let urlString = reviewInfo.reviewImageUrl {
-            let url = URL(string: urlString)
-            dummyCell.foodImageView.sd_setImage(with: url) { (image, err, SDImageCacheType, URL) in
-                guard let imageSize = image?.size else {return}
-                // https://www.raywenderlich.com/1169-easier-auto-layout-coding-constraints-in-ios-9
-                let ratio: CGFloat = imageSize.height / imageSize.width
-            }
-        }
+        // 추후에 image는 리뷰 올릴때부터 size(height, width)를 받아와서 DB에 올려준걸 받아와서 처리하자 ***
         dummyCell.layoutIfNeeded()
         
         let textHeight = dummyCell.postLabel.sizeThatFits(dummyCell.postLabel.frame.size).height
         
-        return CGSize(width: (view.frame.width - 48 - 10) / 2, height: 123 + 159 + textHeight + 10)
+        return CGSize(width: cellWidth, height: 113 + 159 + textHeight)
     }
     
     @objc fileprivate func goBack() {
@@ -323,20 +317,18 @@ class ReviewController: UIViewController, UICollectionViewDelegateFlowLayout, UI
         
         guard let attribute = collectionView.layoutAttributesForItem(at: indexPath) else {return}
         let frame = collectionView.convert(attribute.frame, to: collectionView.superview)
+        let cell = collectionView.cellForItem(at: indexPath) as! ReviewCell
         self.originFrame = frame
         // 이미지를 현재 array에서 따오고 있고, 이거에 대한 크기를 따와서 넘겨줌.
-        let originalImage = reviews2[indexPath.item].image
-        let originalTexts = reviews[indexPath.item].text
-        
-        self.imageSize = originalImage.size
-//        let originUrl = URL(string: imageNameList[indexPath.item])
-        let iv = UIImageView()
-        iv.image = images2[indexPath.item]
-//        iv.sd_setImage(with: originUrl, completed: nil)
+        let reviewInfo = reviewinfos[indexPath.item]
+        let originalImage = cell.foodImageView.image
+        let originalTexts = reviewInfo.reviewText
+        self.imageSize = originalImage?.size
+
         // reviewImage
-        self.originImage = iv.image
-        let originHeight = originalImage.size.height
-        let originWidth = originalImage.size.width
+        self.originImage = cell.foodImageView.image
+        guard let originHeight = originalImage?.size.height else {return}
+        guard let originWidth = originalImage?.size.width else {return}
         let sizeHeight = originHeight * (view.frame.width - 48) / originWidth
         
         
@@ -344,12 +336,12 @@ class ReviewController: UIViewController, UICollectionViewDelegateFlowLayout, UI
         let textFrame = CGRect(x: 24, y: 0, width: view.frame.width - 48, height: 1000)
         let dummyCell = innerReviewHeaderCell(frame: textFrame)
         //letter spacing -0.1
-        let attributedTextString = NSMutableAttributedString(string: originalTexts)
+        let attributedTextString = NSMutableAttributedString(string: originalTexts ?? "")
         attributedTextString.addAttribute(NSAttributedString.Key.kern, value: CGFloat(-0.1), range: NSRange(location: 0, length: attributedTextString.length))
         let mutableParagraphStyle = NSMutableParagraphStyle()
         // line spacing 7
         mutableParagraphStyle.lineSpacing = 7
-        let stringLength = originalTexts.count
+        guard let stringLength = originalTexts?.count else { return }
         attributedTextString.addAttribute(NSAttributedString.Key.paragraphStyle, value: mutableParagraphStyle, range: NSMakeRange(0, stringLength))
         dummyCell.postLabel.attributedText = attributedTextString
         dummyCell.layoutIfNeeded()
@@ -357,11 +349,17 @@ class ReviewController: UIViewController, UICollectionViewDelegateFlowLayout, UI
         let textHeight = dummyCell.postLabel.sizeThatFits(dummyCell.postLabel.frame.size).height
         self.textHeight = textHeight
         
+        let point = reviewInfo.starPoint
+        
         let editreview = EditReviewController()
-        editreview.reviewImage = iv.image
+        editreview.reviewImage = cell.foodImageView.image
         editreview.imageHeight = sizeHeight
         editreview.reviewText = originalTexts
         editreview.textHeight = textHeight
+        editreview.userImage = cell.userImageView.image
+        editreview.userName = cell.restaurantLabel.text
+        editreview.reviewPoint = point
+
         self.navigationController?.pushViewController(editreview, animated: true)
     }
     
@@ -391,21 +389,11 @@ class ReviewController: UIViewController, UICollectionViewDelegateFlowLayout, UI
 
 class ReviewCell: UICollectionViewCell {
     
-    
-    
-//    var review2: Review2? {
-//        didSet {
-//            guard let review2 = review2 else { return }
-//
-//        }
-//    }
-
-    
     let userImageView: UIImageView = {
         let iv = UIImageView()
         iv.image = UIImage(named: "imsi_user")
-        iv.backgroundColor = .red
-        iv.contentMode = .scaleAspectFit
+        iv.backgroundColor = .white
+        iv.contentMode = .scaleAspectFill
         iv.layer.cornerRadius = 16
         iv.layer.masksToBounds = true
         return iv
@@ -413,10 +401,7 @@ class ReviewCell: UICollectionViewCell {
     
     let restaurantLabel: UILabel = {
         let lb = UILabel()
-        // letter spacing -0.1
-        let attributedString = NSMutableAttributedString(string: "Jane Doe for One Cafe")
-        attributedString.addAttribute(NSAttributedString.Key.kern, value: CGFloat(-0.1), range: NSRange(location: 0, length: attributedString.length))
-        lb.attributedText = attributedString
+
         lb.font = UIFont(name: "DMSans-Medium", size: 14)
         lb.textColor = .darkGray
         lb.textAlignment = .left
@@ -426,7 +411,8 @@ class ReviewCell: UICollectionViewCell {
     
     let foodImageView: UIImageView = {
         let iv = UIImageView()
-        iv.backgroundColor = .blue
+        iv.backgroundColor = .white
+        // .scaleAspectFill 로 해야될까..?
         iv.contentMode = .scaleAspectFit
         iv.layer.cornerRadius = 10
         //iv.clipstoBounds 와 동일
@@ -452,7 +438,7 @@ class ReviewCell: UICollectionViewCell {
        // attributtedString(text)는 위에 cell에서 처리해줌.
        lb.font = UIFont(name: "DMSans-Regular", size: 14)
        lb.textColor = .darkGray
-       lb.textAlignment = .center
+       lb.textAlignment = .left
        lb.numberOfLines = 0
        return lb
    }()
@@ -556,13 +542,13 @@ class ReviewCell: UICollectionViewCell {
 //        //dynamc cell sizing을 위해서 위에 따로 cell 설정하는곳에 foodImageView Constraint 작성했음.
         foodImageViewConstraint = foodImageView.anchor(restaurantLabel.bottomAnchor, left: self.leftAnchor, bottom: nil, right: self.rightAnchor, topConstant: 12, leftConstant: 0, bottomConstant: 0, rightConstant: 0, widthConstant: 0, heightConstant: 0).first
         cosmosViewConstraint = cosmosView.anchor(foodImageView.bottomAnchor, left: self.leftAnchor, bottom: nil, right: nil, topConstant: 14, leftConstant: 0, bottomConstant: 0, rightConstant: 0, widthConstant: 84, heightConstant: 14).first
-        starPointConstraint = starPoint.anchor(foodImageView.bottomAnchor, left: cosmosView.rightAnchor, bottom: nil, right: nil, topConstant: 13, leftConstant: 4, bottomConstant: 0, rightConstant: 0, widthConstant: 20, heightConstant: 20).first
+        starPointConstraint = starPoint.anchor(foodImageView.bottomAnchor, left: cosmosView.rightAnchor, bottom: nil, right: self.rightAnchor, topConstant: 13, leftConstant: 4, bottomConstant: 0, rightConstant: 0, widthConstant: 0, heightConstant: 20).first
         heartImageViewConstraint = heartImageView.anchor(nil, left: self.leftAnchor, bottom: self.bottomAnchor, right: nil, topConstant: 0, leftConstant: 0, bottomConstant: 0, rightConstant: 0, widthConstant: 16, heightConstant: 16).first
         heartLabelConstraint = heartLabel.anchor(nil, left: heartImageView.rightAnchor, bottom: self.bottomAnchor, right: nil, topConstant: 0, leftConstant: 4, bottomConstant: 0, rightConstant: 0, widthConstant: 25, heightConstant: 19).first
         commentImageViewConstraint = commentImageView.anchor(nil, left: heartLabel.rightAnchor, bottom: self.bottomAnchor, right: nil, topConstant: 11, leftConstant: 10, bottomConstant: 0, rightConstant: 0, widthConstant: 16, heightConstant: 16).first
         commentLabelConstraint = commentLabel.anchor(nil, left: commentImageView.rightAnchor, bottom: self.bottomAnchor, right: nil, topConstant: 9, leftConstant: 4, bottomConstant: 0, rightConstant: 0, widthConstant: 25, heightConstant: 19).first
         dotsImageViewConsraint = dotsImageView.anchor(nil, left: nil, bottom: self.bottomAnchor, right: self.rightAnchor, topConstant: 0, leftConstant: 0, bottomConstant: 1, rightConstant: 0, widthConstant: 16, heightConstant: 16).first
-        postLabelConstraint = postLabel.anchor(self.starPoint.bottomAnchor, left: self.leftAnchor, bottom: heartImageView.topAnchor, right: self.rightAnchor, topConstant: 5, leftConstant: 0, bottomConstant: 11, rightConstant: 0, widthConstant: 0, heightConstant: 0).first
+        postLabelConstraint = postLabel.anchor(self.starPoint.bottomAnchor, left: self.leftAnchor, bottom: heartImageView.topAnchor, right: self.rightAnchor, topConstant: 5, leftConstant: 0, bottomConstant: 0, rightConstant: 0, widthConstant: 0, heightConstant: 0).first
         
         
     

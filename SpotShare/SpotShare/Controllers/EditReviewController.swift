@@ -55,7 +55,10 @@ class EditReviewController: UIViewController, UICollectionViewDelegateFlowLayout
     var reviewImage: UIImage?
     var textHeight: CGFloat?
     var reviewText: String?
-    
+    var userName: String?
+    var userImage: UIImage?
+    var resName: String?
+    var reviewPoint: Double?
     
     var backImageViewConstraint: NSLayoutConstraint?
     var threedotsImageViewConstraint: NSLayoutConstraint?
@@ -147,13 +150,17 @@ class EditReviewController: UIViewController, UICollectionViewDelegateFlowLayout
         attributedTextString.addAttribute(NSAttributedString.Key.paragraphStyle, value: mutableParagraphStyle, range: NSMakeRange(0, stringLength))
         header.postLabel.attributedText = attributedTextString
         header.postLabel.heightAnchor.constraint(equalToConstant: textHeight ?? 300).isActive = true
+        header.userImageView.image = userImage
+        if let username = userName {
+            header.restaurantLabel.letterSpacing(text: "\(String(describing: username))", spacing: -0.2)
+        }
         
-        let imsirating = 4.0
+        
         // letter spacing -0.1
-        let attributedString = NSMutableAttributedString(string: "\(imsirating)")
-        attributedString.addAttribute(NSAttributedString.Key.kern, value: CGFloat(-0.1), range: NSRange(location: 0, length: attributedString.length))
-        header.starPoint.attributedText = attributedString
-        header.cosmosView.rating = imsirating
+        if let point = reviewPoint {
+            header.starPoint.letterSpacing(text: "\(String(describing: point))", spacing: -0.1)
+            header.cosmosView.rating = reviewPoint ?? 0
+        }
         return header
     }
     
@@ -189,9 +196,9 @@ class innerReviewHeaderCell: UICollectionViewCell {
     
     let userImageView: UIImageView = {
         let iv = UIImageView()
-        iv.image = UIImage(named: "imsi_user")
+//        iv.image = UIImage(named: "imsi_user")
         iv.backgroundColor = .white
-        iv.contentMode = .scaleAspectFit
+        iv.contentMode = .scaleAspectFill
         iv.layer.cornerRadius = 24
         iv.layer.masksToBounds = true
         return iv
@@ -200,9 +207,6 @@ class innerReviewHeaderCell: UICollectionViewCell {
     let restaurantLabel: UILabel = {
         let lb = UILabel()
         // letter spacing -0.2
-        let attributedString = NSMutableAttributedString(string: "Jane Doe for One Cafe")
-        attributedString.addAttribute(NSAttributedString.Key.kern, value: CGFloat(-0.2), range: NSRange(location: 0, length: attributedString.length))
-        lb.attributedText = attributedString
         lb.font = UIFont(name: "DMSans-Medium", size: 17)
         lb.textColor = .darkGray
         lb.textAlignment = .left
