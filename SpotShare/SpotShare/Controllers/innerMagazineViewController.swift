@@ -28,13 +28,7 @@ class innerMagazineViewController: UIViewController, UICollectionViewDelegateFlo
     
     fileprivate let cellid = "cellid"
     
-    // 나중에 사진 여러개로 해서 swipe할꺼면 collectionview로 하자.
-    let restaurantImageView: UIImageView = {
-        let iv = UIImageView()
-        iv.contentMode = .scaleAspectFill
-        iv.layer.masksToBounds = true
-        return iv
-    }()
+    
     
     // 어두운부분 설정
     
@@ -58,44 +52,6 @@ class innerMagazineViewController: UIViewController, UICollectionViewDelegateFlo
         return iv
     }()
     
-    let infoView: UIView = {
-        let view = UIView()
-        view.backgroundColor = .white
-        view.layer.cornerRadius = 45
-        view.layer.masksToBounds = true
-        return view
-    }()
-    
-    let magazineTitleLabel: UILabel = {
-        let lb = UILabel()
-        // letter spacing -0.32
-        let attributedString = NSMutableAttributedString(string: "Top 5 cafes to come with lovers")
-        attributedString.addAttribute(NSAttributedString.Key.kern, value: CGFloat(-0.32), range: NSRange(location: 0, length: attributedString.length))
-        lb.attributedText = attributedString
-        lb.font = UIFont(name: "DMSans-Regular", size: 24)
-        lb.textAlignment = .left
-        lb.numberOfLines = 0
-        lb.textColor = .white
-        lb.backgroundColor = .clear
-        return lb
-    }()
-    
-    let pageIndicatorLabel: UILabel = {
-        let lb = UILabel()
-        // letter spacing -0.45
-        let attributedString = NSMutableAttributedString(string: "#1")
-        attributedString.addAttribute(NSAttributedString.Key.kern, value: CGFloat(-0.45), range: NSRange(location: 0, length: attributedString.length))
-        lb.attributedText = attributedString
-        lb.font = UIFont(name: "DMSans-Regular", size: 20)
-        lb.textAlignment = .center
-        lb.numberOfLines = 0
-        lb.textColor = .white
-        lb.layer.cornerRadius = 16
-        lb.layer.masksToBounds = true
-        lb.backgroundColor = .mainColor
-        return lb
-    }()
-    
     lazy var infoMagazineCollectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
         layout.minimumLineSpacing = 0
@@ -110,15 +66,10 @@ class innerMagazineViewController: UIViewController, UICollectionViewDelegateFlo
         return cv
     }()
     
-
-    
-    var restaurantImageViewConstraint: NSLayoutConstraint?
+    var infoMagazineCollectionViewConstraint: NSLayoutConstraint?
     var backImageViewConstraint: NSLayoutConstraint?
     var shareImageViewConstraint: NSLayoutConstraint?
-    var infoViewConstraint: NSLayoutConstraint?
-    var magazineTitleLabelConstraint: NSLayoutConstraint?
-    var pageIndicatorLabelConstraint: NSLayoutConstraint?
-    var infoMagazineCollectionViewConstraint: NSLayoutConstraint?
+    
 
     
     override func viewDidLoad() {
@@ -128,37 +79,29 @@ class innerMagazineViewController: UIViewController, UICollectionViewDelegateFlo
         self.navigationController?.interactivePopGestureRecognizer?.isEnabled = true
         self.navigationController?.interactivePopGestureRecognizer?.delegate = nil
         
-        view.addSubview(restaurantImageView)
+        infoMagazineCollectionView.register(innerMagazineInfoCell.self, forCellWithReuseIdentifier: cellid)
+        
+        view.addSubview(infoMagazineCollectionView)
         view.addSubview(backImageView)
         view.addSubview(shareImageView)
-        view.addSubview(infoView)
-        view.addSubview(magazineTitleLabel)
-        view.addSubview(pageIndicatorLabel)
-        infoView.addSubview(infoMagazineCollectionView)
+        
         
         
         if #available(iOS 11.0, *) {
-            restaurantImageViewConstraint = restaurantImageView.anchor(view.topAnchor, left: view.leftAnchor, bottom: view.bottomAnchor, right: view.rightAnchor, topConstant: 0, leftConstant: 0, bottomConstant: 374 - 50, rightConstant: 0, widthConstant: 0, heightConstant: 0).first
+
             backImageViewConstraint = backImageView.anchor(view.safeAreaLayoutGuide.topAnchor, left: view.leftAnchor, bottom: nil, right: nil, topConstant: 16, leftConstant: 24, bottomConstant: 0, rightConstant: 0, widthConstant: 24, heightConstant: 24).first
             shareImageViewConstraint = shareImageView.anchor(view.safeAreaLayoutGuide.topAnchor, left: nil, bottom: nil, right: view.rightAnchor, topConstant: 16, leftConstant: 0, bottomConstant: 0, rightConstant: 24, widthConstant: 24, heightConstant: 24).first
-            infoViewConstraint = infoView.anchor(nil, left: view.leftAnchor, bottom: view.bottomAnchor, right: view.rightAnchor, topConstant: 0, leftConstant: 0, bottomConstant: -45, rightConstant: 0, widthConstant: 0, heightConstant: 374 + 45).first
-            pageIndicatorLabelConstraint = pageIndicatorLabel.anchor(nil, left: nil, bottom: infoView.topAnchor, right: view.rightAnchor, topConstant: 0, leftConstant: 0, bottomConstant: 24, rightConstant: 24, widthConstant: 56, heightConstant: 56).first
-            magazineTitleLabelConstraint = magazineTitleLabel.anchor(nil, left: view.leftAnchor, bottom: infoView.topAnchor, right: pageIndicatorLabel.leftAnchor, topConstant: 0, leftConstant: 24, bottomConstant: 22, rightConstant: 47, widthConstant: 0, heightConstant: 64).first
-            infoMagazineCollectionViewConstraint = infoMagazineCollectionView.anchor(infoView.topAnchor, left: infoView.leftAnchor, bottom: infoView.bottomAnchor, right: infoView.rightAnchor, topConstant: 0, leftConstant: 0, bottomConstant: 0, rightConstant: 0, widthConstant: 0, heightConstant: 0).first
+            infoMagazineCollectionViewConstraint = infoMagazineCollectionView.anchor(view.safeAreaLayoutGuide.topAnchor, left: view.leftAnchor, bottom: view.safeAreaLayoutGuide.bottomAnchor, right: view.rightAnchor, topConstant: 0, leftConstant: 0, bottomConstant: 0, rightConstant: 0, widthConstant: 0, heightConstant: 0).first
             
         }
             
         else {
-            restaurantImageViewConstraint = restaurantImageView.anchor(view.topAnchor, left: view.leftAnchor, bottom: view.bottomAnchor, right: view.rightAnchor, topConstant: 0, leftConstant: 0, bottomConstant: 374 - 20, rightConstant: 0, widthConstant: 0, heightConstant: 0).first
             backImageViewConstraint = backImageView.anchor(view.topAnchor, left: view.leftAnchor, bottom: nil, right: nil, topConstant: 16, leftConstant: 24, bottomConstant: 0, rightConstant: 0, widthConstant: 24, heightConstant: 24).first
             shareImageViewConstraint = shareImageView.anchor(view.topAnchor, left: nil, bottom: nil, right: view.rightAnchor, topConstant: 16, leftConstant: 0, bottomConstant: 0, rightConstant: 24, widthConstant: 24, heightConstant: 24).first
-            infoViewConstraint = infoView.anchor(nil, left: view.leftAnchor, bottom: view.bottomAnchor, right: view.rightAnchor, topConstant: 0, leftConstant: 0, bottomConstant: -45, rightConstant: 0, widthConstant: 0, heightConstant: 374 + 45).first
-            pageIndicatorLabelConstraint = pageIndicatorLabel.anchor(nil, left: nil, bottom: infoView.topAnchor, right: view.rightAnchor, topConstant: 0, leftConstant: 0, bottomConstant: 24, rightConstant: 24, widthConstant: 56, heightConstant: 56).first
-            magazineTitleLabelConstraint = magazineTitleLabel.anchor(nil, left: view.leftAnchor, bottom: infoView.topAnchor, right: pageIndicatorLabel.leftAnchor, topConstant: 0, leftConstant: 24, bottomConstant: 22, rightConstant: 47, widthConstant: 0, heightConstant: 64).first
-            infoMagazineCollectionViewConstraint = infoMagazineCollectionView.anchor(infoView.topAnchor, left: infoView.leftAnchor, bottom: infoView.bottomAnchor, right: infoView.rightAnchor, topConstant: 0, leftConstant: 0, bottomConstant: 0, rightConstant: 0, widthConstant: 0, heightConstant: 0).first
+            infoMagazineCollectionViewConstraint = infoMagazineCollectionView.anchor(view.topAnchor, left: view.leftAnchor, bottom: view.bottomAnchor, right: view.rightAnchor, topConstant: 0, leftConstant: 0, bottomConstant: 0, rightConstant: 0, widthConstant: 0, heightConstant: 0).first
         }
         
-        infoMagazineCollectionView.register(innerMagazineInfoCell.self, forCellWithReuseIdentifier: cellid)
+        
         
     }
     
@@ -223,7 +166,11 @@ class innerMagazineViewController: UIViewController, UICollectionViewDelegateFlo
         cell.menuLabel.letterSpacing(text: resinfo.menuText ?? "", spacing: -0.1)
         cell.callLabel.letterSpacing(text: resinfo.teleText ?? "", spacing: -0.1)
         cell.openTimeLabel.letterSpacing(text: resinfo.hourText ?? "", spacing: -0.1)
-
+        let urlString = resinfo.resImageUrl ?? ""
+        let url = URL(string: urlString)
+        cell.restaurantImageView.sd_setImage(with: url, placeholderImage: nil, options: .scaleDownLargeImages, completed: nil)
+        cell.pageIndicatorLabel.letterSpacing(text: "#\(indexPath.item + 1)", spacing: -0.45)
+        cell.magazineTitleLabel.letterSpacing(text: magTitle ?? "", spacing: -0.32)
         return cell
     }
     
@@ -235,6 +182,13 @@ class innerMagazineViewController: UIViewController, UICollectionViewDelegateFlo
         return resInfos.count
     }
     
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        let resinfo = resInfos[indexPath.item]
+        let restaurant = RestaurantViewController()
+        restaurant.resinfo = resinfo
+        self.navigationController?.pushViewController(restaurant, animated: true)
+    }
+    
     
     @objc fileprivate func goBack() {
         self.navigationController?.popViewController(animated: true)
@@ -244,23 +198,37 @@ class innerMagazineViewController: UIViewController, UICollectionViewDelegateFlo
         print("pressed share button")
     }
     
-    func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
-        let offset = scrollView.contentOffset.x / scrollView.bounds.width
-        pageIndicatorLabel.text = "#" + String(Int(CGFloat(1) + offset))
-        guard let urlString = resInfos[Int(offset)].resImageUrl else {return}
-        let url = URL(string: urlString)
-        
-        // 위 imageView 위 아래 fade 취해주고, collectionview 혹은 header Cell로 만든다.
-        // 밑에 cell background color는 black으로 해주어서 통일성 증가.
-        // #1 이거는 밑에 cell에 제목 오른쪽 끝에 두는게 나을듯!
-        restaurantImageView.sd_imageTransition = .fade
-        restaurantImageView.sd_setImage(with: url, completed: nil)
-    }
 
 }
 
 
 class innerMagazineInfoCell: UICollectionViewCell {
+    
+    // 나중에 사진 여러개로 해서 swipe할꺼면 collectionview로 하자.
+    let restaurantImageView: UIImageView = {
+        let iv = UIImageView()
+        iv.contentMode = .scaleAspectFill
+        iv.layer.masksToBounds = true
+        return iv
+    }()
+    
+    let magazineTitleLabel: UILabel = {
+        let lb = UILabel()
+        lb.font = UIFont(name: "DMSans-Regular", size: 24)
+        lb.textAlignment = .left
+        lb.numberOfLines = 0
+        lb.textColor = .white
+        lb.backgroundColor = .clear
+        return lb
+    }()
+    
+    let infoView: UIView = {
+        let view = UIView()
+        view.backgroundColor = .white
+        view.layer.cornerRadius = 45
+        view.layer.masksToBounds = true
+        return view
+    }()
     
     let restaurantNameLabel: UILabel = {
         let lb = UILabel()
@@ -269,6 +237,19 @@ class innerMagazineInfoCell: UICollectionViewCell {
         lb.numberOfLines = 0
         lb.textColor = .black
         lb.backgroundColor = .white
+        lb.adjustsFontSizeToFitWidth = true
+        return lb
+    }()
+    
+    let pageIndicatorLabel: UILabel = {
+        let lb = UILabel()
+        lb.font = UIFont(name: "DMSans-Regular", size: 20)
+        lb.textAlignment = .center
+        lb.numberOfLines = 0
+        lb.textColor = .white
+        lb.layer.cornerRadius = 16
+        lb.layer.masksToBounds = true
+        lb.backgroundColor = .mainColor
         return lb
     }()
     
@@ -406,7 +387,11 @@ class innerMagazineInfoCell: UICollectionViewCell {
         fatalError("init(coder:) has not been implemented")
     }
     
+    var restaurantImageViewConstraint: NSLayoutConstraint?
+    var magazineTitleLabelConstraint: NSLayoutConstraint?
+    var infoViewConstraint: NSLayoutConstraint?
     var restaurantNameLabelConstraint: NSLayoutConstraint?
+    var pageIndicatorLabelConstraint: NSLayoutConstraint?
     var cosmosViewConstraint: NSLayoutConstraint?
     var pointLabelConstraint: NSLayoutConstraint?
     var locationImageViewConstraint: NSLayoutConstraint?
@@ -422,8 +407,12 @@ class innerMagazineInfoCell: UICollectionViewCell {
     var detailLabelConstraint: NSLayoutConstraint?
     
     fileprivate func setupViews() {
-        
+
+        addSubview(restaurantImageView)
+        addSubview(infoView)
+        addSubview(magazineTitleLabel)
         addSubview(restaurantNameLabel)
+        addSubview(pageIndicatorLabel)
         addSubview(cosmosView)
         addSubview(pointLabel)
         addSubview(locationImageView)
@@ -437,9 +426,12 @@ class innerMagazineInfoCell: UICollectionViewCell {
         addSubview(callImageView)
         addSubview(callLabel)
         addSubview(detailLabel)
-        
-        
-        restaurantNameLabelConstraint = restaurantNameLabel.anchor(self.topAnchor, left: self.leftAnchor, bottom: nil, right: self.rightAnchor, topConstant: 44, leftConstant: 50, bottomConstant: 0, rightConstant: 50, widthConstant: 0, heightConstant: 28).first
+
+        restaurantImageViewConstraint = restaurantImageView.anchor(self.topAnchor, left: self.leftAnchor, bottom: self.bottomAnchor, right: self.rightAnchor, topConstant: 0, leftConstant: 0, bottomConstant: 374 - 70, rightConstant: 0, widthConstant: 0, heightConstant: 0).first
+        infoViewConstraint = infoView.anchor(nil, left: self.leftAnchor, bottom: self.bottomAnchor, right: self.rightAnchor, topConstant: 0, leftConstant: 0, bottomConstant: -45 + 10, rightConstant: 0, widthConstant: 0, heightConstant: 374).first
+        magazineTitleLabelConstraint = magazineTitleLabel.anchor(nil, left: self.leftAnchor, bottom: infoView.topAnchor, right: self.rightAnchor, topConstant: 0, leftConstant: 24, bottomConstant: 0, rightConstant: 47, widthConstant: 0, heightConstant: 64).first
+        restaurantNameLabelConstraint = restaurantNameLabel.anchor(infoView.topAnchor, left: self.leftAnchor, bottom: nil, right: self.rightAnchor, topConstant: 44, leftConstant: 50, bottomConstant: 0, rightConstant: 50, widthConstant: 0, heightConstant: 28).first
+        pageIndicatorLabelConstraint = pageIndicatorLabel.anchor(restaurantNameLabel.topAnchor, left: nil, bottom: nil, right: self.rightAnchor, topConstant: -14, leftConstant: 0, bottomConstant: 0, rightConstant: 24, widthConstant: 56, heightConstant: 56).first
         cosmosViewConstraint = cosmosView.anchor(restaurantNameLabel.bottomAnchor, left: self.leftAnchor, bottom: nil, right: nil, topConstant: 10, leftConstant: 50, bottomConstant: 0, rightConstant: 0, widthConstant: 84, heightConstant: 16).first
         pointLabelConstraint = pointLabel.anchor(restaurantNameLabel.bottomAnchor, left: cosmosView.rightAnchor, bottom: nil, right: self.rightAnchor, topConstant: 8, leftConstant: 4, bottomConstant: 0, rightConstant: 50, widthConstant: 0, heightConstant: 20).first
         locationImageViewConstraint = locationImageView.anchor(cosmosView.bottomAnchor, left: self.leftAnchor, bottom: nil, right: nil, topConstant: 18, leftConstant: 50, bottomConstant: 0, rightConstant: 0, widthConstant: 16, heightConstant: 16).first

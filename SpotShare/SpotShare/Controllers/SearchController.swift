@@ -8,7 +8,7 @@
 
 import UIKit
 // https://github.com/ergunemr/BottomPopup
-class SearchController: BottomPopupViewController, UICollectionViewDelegateFlowLayout, UICollectionViewDelegate, UICollectionViewDataSource {
+class SearchController: BottomPopupViewController, UICollectionViewDelegateFlowLayout, UICollectionViewDelegate, UICollectionViewDataSource, UISearchBarDelegate {
     
     deinit {
         print("no retain cycle in SearchController")
@@ -87,6 +87,7 @@ class SearchController: BottomPopupViewController, UICollectionViewDelegateFlowL
     }()
     
     // FLOG CommentInputTextView 확인.
+    // https://www.letsbuildthatapp.com/course/Instagram-Firebase
     // LBTA 확인.
     let searchText: UILabel = {
         let lb = UILabel()
@@ -96,6 +97,18 @@ class SearchController: BottomPopupViewController, UICollectionViewDelegateFlowL
         lb.textAlignment = .left
         return lb
     }()
+    
+    
+//    lazy var searchbar: UISearchBar = {
+//        let sb = UISearchBar()
+//        sb.placeholder = "검색어를 입력해주세요"
+//        sb.delegate = self
+//        sb.barTintColor = .gray
+//        UITextField.appearance(whenContainedInInstancesOf: [UISearchBar.self]).backgroundColor = UIColor(red: 230, green: 230, blue: 230, alpha: 1)
+//        sb.returnKeyType = UIReturnKeyType.done
+//        sb.becomeFirstResponder()
+//        return sb
+//    }()
 
     
     lazy var innerSearchCollectionview: UICollectionView = {
