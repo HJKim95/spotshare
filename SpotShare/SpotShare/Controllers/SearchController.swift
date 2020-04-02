@@ -8,7 +8,8 @@
 
 import UIKit
 // https://github.com/ergunemr/BottomPopup
-class SearchController: BottomPopupViewController, UICollectionViewDelegateFlowLayout, UICollectionViewDelegate, UICollectionViewDataSource, UISearchBarDelegate {
+// **** 추후에 main search bar에서 그대로 올라올수있게 업데이트 하자!!!
+class SearchController: BottomPopupViewController, UICollectionViewDelegateFlowLayout, UICollectionViewDelegate, UICollectionViewDataSource, UITextFieldDelegate {
     
     deinit {
         print("no retain cycle in SearchController")
@@ -89,27 +90,54 @@ class SearchController: BottomPopupViewController, UICollectionViewDelegateFlowL
     // FLOG CommentInputTextView 확인.
     // https://www.letsbuildthatapp.com/course/Instagram-Firebase
     // LBTA 확인.
-    let searchText: UILabel = {
-        let lb = UILabel()
-        lb.text = "Search for anything"
-        lb.textColor = .gray
-        lb.font = UIFont(name: "DMSans-Regular", size: 14)
-        lb.textAlignment = .left
-        return lb
+    var dividerLineConstraint: NSLayoutConstraint?
+    var clearButtonConstraint: NSLayoutConstraint?
+    var closeButtonConstraint: NSLayoutConstraint?
+    
+    lazy var contatinerView: UIView = {
+        let containerview = UIView()
+        containerview.backgroundColor = .white
+        containerview.frame = CGRect(x: 0, y: 0, width: 100, height: 40)
+        
+        let dividerLine = UIView()
+        dividerLine.backgroundColor = UIColor(white: 0.4, alpha: 0.4)
+        containerview.addSubview(dividerLine)
+        dividerLineConstraint = dividerLine.anchor(containerview.topAnchor, left: containerview.leftAnchor, bottom: nil, right: containerview.rightAnchor, topConstant: 0, leftConstant: 0, bottomConstant: 0, rightConstant: 0, widthConstant: 0, heightConstant: 0.5).first
+        
+        let clearButton = UIButton(type: .system)
+        clearButton.setTitle("CLEAR", for: .normal)
+        clearButton.setTitleColor(.gray, for: .normal)
+        clearButton.titleLabel?.font = UIFont(name: "DMSans-Medium", size: 12)
+        clearButton.addTarget(self, action: #selector(clearText), for: .touchUpInside)
+        containerview.addSubview(clearButton)
+        clearButtonConstraint = clearButton.anchor(containerview.topAnchor, left: containerview.leftAnchor, bottom: containerview.bottomAnchor, right: nil, topConstant: 0, leftConstant: 12, bottomConstant: 0, rightConstant: 0, widthConstant: 50, heightConstant: 0).first
+        
+        let closeButton = UIButton(type: .system)
+        closeButton.setTitle("CLOSE", for: .normal)
+        closeButton.setTitleColor(.gray, for: .normal)
+        closeButton.titleLabel?.font = UIFont(name: "DMSans-Bold", size: 12)
+        closeButton.addTarget(self, action: #selector(closeText), for: .touchUpInside)
+        containerview.addSubview(closeButton)
+        closeButtonConstraint = closeButton.anchor(containerview.topAnchor, left: nil, bottom: containerview.bottomAnchor, right: containerview.rightAnchor, topConstant: 0, leftConstant: 0, bottomConstant: 0, rightConstant: 12, widthConstant: 50, heightConstant: 0).first
+        return containerview
     }()
     
+    lazy var searchTextField: UITextField = {
+        let tf = UITextField()
+        tf.placeholder = "검색어를 입력하세요"
+        tf.font = UIFont(name: "DMSans-Regular", size: 14)
+        tf.returnKeyType = .search
+        tf.autocorrectionType = .no
+        tf.autocapitalizationType = .none
+        tf.delegate = self
+        return tf
+    }()
     
-//    lazy var searchbar: UISearchBar = {
-//        let sb = UISearchBar()
-//        sb.placeholder = "검색어를 입력해주세요"
-//        sb.delegate = self
-//        sb.barTintColor = .gray
-//        UITextField.appearance(whenContainedInInstancesOf: [UISearchBar.self]).backgroundColor = UIColor(red: 230, green: 230, blue: 230, alpha: 1)
-//        sb.returnKeyType = UIReturnKeyType.done
-//        sb.becomeFirstResponder()
-//        return sb
-//    }()
-
+    override var inputAccessoryView: UIView? {
+        get {
+            return contatinerView
+        }
+    }
     
     lazy var innerSearchCollectionview: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
@@ -130,21 +158,26 @@ class SearchController: BottomPopupViewController, UICollectionViewDelegateFlowL
     var whiteBackViewConstraint: NSLayoutConstraint?
     var searchViewConstraint: NSLayoutConstraint?
     var searchImageViewConstraint: NSLayoutConstraint?
+    var searchTextFieldConstraint: NSLayoutConstraint?
     var searchTextConstraint: NSLayoutConstraint?
     var innerSearchConstraint: NSLayoutConstraint?
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        self.searchTextField.becomeFirstResponder()
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
         view.backgroundColor = .clear
-        view.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(goSearchResult)))
         
         view.addSubview(thumbBackView)
         thumbBackView.addSubview(thumbView)
         view.addSubview(whiteBackView)
         whiteBackView.addSubview(searchView)
         searchView.addSubview(searchImageView)
-        searchView.addSubview(searchText)
+        searchView.addSubview(searchTextField)
         whiteBackView.addSubview(innerSearchCollectionview)
         
         thumbBackViewConstraint = thumbBackView.anchor(view.topAnchor, left: view.leftAnchor, bottom: nil, right: view.rightAnchor, topConstant: 0, leftConstant: 0, bottomConstant: 0, rightConstant: 0, widthConstant: 0, heightConstant: 27).first
@@ -152,7 +185,7 @@ class SearchController: BottomPopupViewController, UICollectionViewDelegateFlowL
         whiteBackViewConstraint = whiteBackView.anchor(thumbBackView.bottomAnchor, left: view.leftAnchor, bottom: view.bottomAnchor, right: view.rightAnchor, topConstant: 0, leftConstant: 0, bottomConstant: 0, rightConstant: 0, widthConstant: 0, heightConstant: 0).first
         searchViewConstraint = searchView.anchor(whiteBackView.topAnchor, left: view.leftAnchor, bottom: nil, right: view.rightAnchor, topConstant: 16, leftConstant: 24, bottomConstant: 0, rightConstant: 24, widthConstant: 0, heightConstant: 48).first
         searchImageViewConstraint = searchImageView.anchor(searchView.topAnchor, left: searchView.leftAnchor, bottom: nil, right: nil, topConstant: 12, leftConstant: 13, bottomConstant: 0, rightConstant: 0, widthConstant: 24, heightConstant: 24).first
-        searchTextConstraint = searchText.anchor(searchView.topAnchor, left: searchImageView.rightAnchor, bottom: nil, right: searchView.rightAnchor, topConstant: 14, leftConstant: 8, bottomConstant: 0, rightConstant: 0, widthConstant: 0, heightConstant: 20).first
+        searchTextFieldConstraint = searchTextField.anchor(searchView.topAnchor, left: searchImageView.rightAnchor, bottom: nil, right: searchView.rightAnchor, topConstant: 14, leftConstant: 8, bottomConstant: 0, rightConstant: 12, widthConstant: 0, heightConstant: 20).first
         innerSearchConstraint = innerSearchCollectionview.anchor(searchView.bottomAnchor, left: whiteBackView.leftAnchor, bottom: whiteBackView.bottomAnchor, right: whiteBackView.rightAnchor, topConstant: 20, leftConstant: 24, bottomConstant: 0, rightConstant: 24, widthConstant: 0, heightConstant: 0).first
         
         innerSearchCollectionview.register(RecentSearchCell.self, forCellWithReuseIdentifier: cellid)
@@ -163,6 +196,22 @@ class SearchController: BottomPopupViewController, UICollectionViewDelegateFlowL
         self.dismiss(animated: true) {
             self.delegate?.goSearchResult()
         }
+    }
+    
+    @objc fileprivate func clearText() {
+        self.searchTextField.text = nil
+    }
+    
+    @objc fileprivate func closeText() {
+        self.searchTextField.endEditing(true)
+    }
+    
+    
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        let text = textField.text
+        print(text)
+        goSearchResult()
+        return true
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {

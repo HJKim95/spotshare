@@ -52,12 +52,13 @@ class innerSpotCell: UICollectionViewCell {
         lb.font = UIFont(name: "DMSans-Regular", size: 12)
         lb.textColor = .gray
         lb.textAlignment = .left
+        lb.adjustsFontSizeToFitWidth = true
         return lb
     }()
     
     let toiletImageView: UIImageView = {
         let iv = UIImageView()
-        iv.backgroundColor = .clear
+        iv.backgroundColor = .white
         iv.contentMode = .scaleAspectFit
         return iv
     }()
@@ -65,9 +66,10 @@ class innerSpotCell: UICollectionViewCell {
     let toiletLabel: UILabel = {
         let lb = UILabel()
         lb.backgroundColor = .clear
-        lb.font = UIFont(name: "DMSans-Regular", size: 10)
-        lb.textColor = .white
-        lb.textAlignment = .right
+        lb.font = UIFont(name: "DMSans-Regular", size: 11)
+        lb.textColor = .gray
+        lb.textAlignment = .center
+        lb.adjustsFontSizeToFitWidth = true
         return lb
     }()
     
@@ -108,23 +110,39 @@ class innerSpotCell: UICollectionViewCell {
         
         
         distanceImageViewConstraint = distanceImageView.anchor(nil, left: self.leftAnchor, bottom: self.bottomAnchor, right: nil, topConstant: 0, leftConstant: 0, bottomConstant: 6, rightConstant: 0, widthConstant: 10, heightConstant: 10).first
-        distanceLabelConstraint = distanceLabel.anchor(nil, left: distanceImageView.rightAnchor, bottom: self.bottomAnchor, right: self.rightAnchor, topConstant: 0, leftConstant: 3, bottomConstant: 4, rightConstant: 0, widthConstant: 0, heightConstant: 16).first
+        distanceLabelConstraint = distanceLabel.anchor(nil, left: distanceImageView.rightAnchor, bottom: self.bottomAnchor, right: nil, topConstant: 0, leftConstant: 3, bottomConstant: 4, rightConstant: 0, widthConstant: 35, heightConstant: 16).first
+        toiletLabelConstraint = toiletLabel.anchor(nil, left: nil, bottom: self.bottomAnchor, right: self.rightAnchor, topConstant: 0, leftConstant: 0, bottomConstant: 4, rightConstant: 0, widthConstant: 30, heightConstant: 16).first
+        toiletImageViewConstraint = toiletImageView.anchor(nil, left: nil, bottom: self.bottomAnchor, right: toiletLabel.leftAnchor, topConstant: 0, leftConstant: 0, bottomConstant: 6, rightConstant: 3, widthConstant: 12, heightConstant: 12).first
+        
         resLabelConstraint = resLabel.anchor(nil, left: self.leftAnchor, bottom: distanceLabel.topAnchor, right: nil, topConstant: 0, leftConstant: 0, bottomConstant: 1, rightConstant: 0, widthConstant: 108, heightConstant: 18).first
         pointLabelConstraint = pointLabel.anchor(nil, left: resLabel.rightAnchor, bottom: distanceLabel.topAnchor, right: self.rightAnchor, topConstant: 0, leftConstant: 16, bottomConstant: 0, rightConstant: 0, widthConstant: 32, heightConstant: 21).first
         resImageViewConstraint = resImageView.anchor(self.topAnchor, left: self.leftAnchor, bottom: resLabel.topAnchor, right: self.rightAnchor, topConstant: 16, leftConstant: 0, bottomConstant: 9, rightConstant: 0, widthConstant: 0, heightConstant: 0).first
-        toiletImageViewConstraint = toiletImageView.anchor(self.topAnchor, left: nil, bottom: nil, right: self.rightAnchor, topConstant: 26, leftConstant: 0, bottomConstant: 0, rightConstant: 0, widthConstant: 28 + 10, heightConstant: 23).first
-        toiletLabelConstraint = toiletLabel.anchor(self.topAnchor, left: nil, bottom: nil, right: self.rightAnchor, topConstant: 52, leftConstant: 0, bottomConstant: 0, rightConstant: 10, widthConstant: 49, heightConstant: 13).first
+        
         
         
     }
     
+//    let gradientLayer = CAGradientLayer()
+//
+//    fileprivate func setupGradientLayer() {
+//        gradientLayer.colors = [UIColor.black.withAlphaComponent(0.4).cgColor, UIColor.clear.cgColor]
+//        gradientLayer.cornerRadius = 12
+//        gradientLayer.locations = [0,0.5]
+//        layer.addSublayer(gradientLayer)
+////        gradientLayer.frame = CGRect(x: 0, y: 16, width: 50, height: 50)
+////        resImageView.layer.insertSublayer(gradientLayer, at: 0)
+//    }
+//    override func layoutSubviews() {
+//        gradientLayer.frame = resImageView.frame
+//    }
+    
     fileprivate func checkToilet() {
         // toilet image width가 서로 달라서 각각 padding을 넣어주어 맞추어줌.
         if toilet == "남녀구분" {
-            toiletImageView.image = UIImage(named: "seperated")?.withAlignmentRectInsets(UIEdgeInsets(top: 0, left: 0, bottom: 0, right: -10))
+            toiletImageView.image = UIImage(named: "Seperate Toilet_gray")
         }
         else {
-            toiletImageView.image = UIImage(named: "unisex")?.withAlignmentRectInsets(UIEdgeInsets(top: 0, left: -9.5, bottom: 0, right: -9.5))
+            toiletImageView.image = UIImage(named: "Unisex Toilet_gray")
 
         }
     }

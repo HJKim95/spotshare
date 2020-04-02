@@ -38,8 +38,8 @@ class RestaurantReviewCell: UICollectionViewCell, UICollectionViewDelegateFlowLa
         return cv
     }()
     
-    var reviews = [Review]()
-    var reviews2 = [Review2]()
+//    var reviews = [Review]()
+//    var reviews2 = [Review2]()
     
     
     override init(frame: CGRect) {
@@ -57,14 +57,14 @@ class RestaurantReviewCell: UICollectionViewCell, UICollectionViewDelegateFlowLa
     fileprivate func setupLayouts() {
         backgroundColor = .white
         
-        for text in texts {
-            let review = Review(text: text)
-            self.reviews.append(review)
-        }
-        for image in images2 {
-            let image = Review2(image: image)
-            self.reviews2.append(image)
-        }
+//        for text in texts {
+//            let review = Review(text: text)
+//            self.reviews.append(review)
+//        }
+//        for image in images2 {
+//            let image = Review2(image: image)
+//            self.reviews2.append(image)
+//        }
         
         addSubview(reviewCollectionView)
         
@@ -119,13 +119,13 @@ class RestaurantReviewCell: UICollectionViewCell, UICollectionViewDelegateFlowLa
 //        dummyCell.review2 = reviews2[indexPath.item]
         dummyCell.layoutIfNeeded()
         
-        let imageRatio = reviews2[indexPath.item].image.size.height / reviews2[indexPath.item].image.size.width
-        let imageHeight = imageRatio * (self.frame.width - 48 - 10) / 2
+//        let imageRatio = reviews2[indexPath.item].image.size.height / reviews2[indexPath.item].image.size.width
+//        let imageHeight = imageRatio * (self.frame.width - 48 - 10) / 2
         
         let textHeight = dummyCell.postLabel.sizeThatFits(dummyCell.postLabel.frame.size).height
         
         
-        return CGSize(width: (self.frame.width - 48 - 10) / 2, height: 125.5 + imageHeight + textHeight)
+        return CGSize(width: (self.frame.width - 48 - 10) / 2, height: 125.5 + 0 + textHeight)
     }
     
     func scrollViewDidScroll(_ scrollView: UIScrollView) {

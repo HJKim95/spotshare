@@ -49,7 +49,6 @@
 		10740DE4237DC1C3001A7C32 /* DMSans-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 10740DE1237DC1C2001A7C32 /* DMSans-Bold.ttf */; };
 		10740DE6237DC1C3001A7C32 /* DMSans-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 10740DE3237DC1C3001A7C32 /* DMSans-Medium.ttf */; };
 		10740DE8237DC75F001A7C32 /* DMSans-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 10740DE7237DC75F001A7C32 /* DMSans-Regular.ttf */; };
-		10740DEB23813540001A7C32 /* Review.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10740DEA23813540001A7C32 /* Review.swift */; };
 		10740DED23825CE7001A7C32 /* RestaurantMonthController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10740DEC23825CE7001A7C32 /* RestaurantMonthController.swift */; };
 		10740DF9238537EF001A7C32 /* UPCarouselFlowLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10740DF8238537EF001A7C32 /* UPCarouselFlowLayout.swift */; };
 		10740DFB238641A3001A7C32 /* MagazineController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10740DFA238641A3001A7C32 /* MagazineController.swift */; };
@@ -123,7 +122,6 @@
 		10740DE1237DC1C2001A7C32 /* DMSans-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "DMSans-Bold.ttf"; sourceTree = "<group>"; };
 		10740DE3237DC1C3001A7C32 /* DMSans-Medium.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "DMSans-Medium.ttf"; sourceTree = "<group>"; };
 		10740DE7237DC75F001A7C32 /* DMSans-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "DMSans-Regular.ttf"; sourceTree = "<group>"; };
-		10740DEA23813540001A7C32 /* Review.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Review.swift; sourceTree = "<group>"; };
 		10740DEC23825CE7001A7C32 /* RestaurantMonthController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RestaurantMonthController.swift; sourceTree = "<group>"; };
 		10740DF8238537EF001A7C32 /* UPCarouselFlowLayout.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UPCarouselFlowLayout.swift; sourceTree = "<group>"; };
 		10740DFA238641A3001A7C32 /* MagazineController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MagazineController.swift; sourceTree = "<group>"; };
@@ -281,7 +279,6 @@
 		10740DE92381351D001A7C32 /* Models */ = {
 			isa = PBXGroup;
 			children = (
-				10740DEA23813540001A7C32 /* Review.swift */,
 				101144422410D299005939CB /* MainMagazineModel.swift */,
 				103688EE2410F140006CFF28 /* ResInfoModel.swift */,
 				105200872431AEEA005C4107 /* ReviewModel.swift */,
@@ -548,7 +545,6 @@
 				10328E4C23D5F763001EB6CF /* WriteReviewController.swift in Sources */,
 				103A40BB2324A30400F69DDB /* BottomPopupPresentAnimator.swift in Sources */,
 				1029C3A623CD90C000185E9A /* EditProfileController.swift in Sources */,
-				10740DEB23813540001A7C32 /* Review.swift in Sources */,
 				103A40BF2326C57C00F69DDB /* CircularCollectionViewLayout.swift in Sources */,
 				10740DED23825CE7001A7C32 /* RestaurantMonthController.swift in Sources */,
 				1031C288233F1FC70048A662 /* HorizontalPageControlView.swift in Sources */,

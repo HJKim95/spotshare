@@ -188,8 +188,8 @@ class myReviewGridCell: UICollectionViewCell, UICollectionViewDelegateFlowLayout
         return cv
     }()
     
-    var reviews = [Review]()
-    var reviews2 = [Review2]()
+//    var reviews = [Review]()
+//    var reviews2 = [Review2]()
     
     
     
@@ -206,14 +206,14 @@ class myReviewGridCell: UICollectionViewCell, UICollectionViewDelegateFlowLayout
     
     
     fileprivate func setupLayouts() {
-        for text in texts {
-            let review = Review(text: text)
-            self.reviews.append(review)
-        }
-        for image in images2 {
-            let image = Review2(image: image)
-            self.reviews2.append(image)
-        }
+//        for text in texts {
+//            let review = Review(text: text)
+//            self.reviews.append(review)
+//        }
+//        for image in images2 {
+//            let image = Review2(image: image)
+//            self.reviews2.append(image)
+//        }
         
         addSubview(reviewCollectionView)
         
@@ -263,15 +263,15 @@ class myReviewGridCell: UICollectionViewCell, UICollectionViewDelegateFlowLayout
 //            dummyCell.review2 = reviews2[indexPath.item]
             dummyCell.layoutIfNeeded()
             
-            let imageRatio = reviews2[indexPath.item].image.size.height / reviews2[indexPath.item].image.size.width
-            let imageHeight = imageRatio * (frame.width - 48 - 10) / 2
+//            let imageRatio = reviews2[indexPath.item].image.size.height / reviews2[indexPath.item].image.size.width
+//            let imageHeight = imageRatio * (frame.width - 48 - 10) / 2
             
             let textHeight = dummyCell.postLabel.sizeThatFits(dummyCell.postLabel.frame.size).height
             
             // review controller에서는 125.5가 맞았는데 여기서는 그렇게하면 오류남.
             // 숫자를 220정도부터 오류가 안나고 300정도는 해야 글자가 안날라가고 다 있는듯. 지금 현재는 230으로 설정.(height)
             // 근데 다른거에 여백이 너무 남아서 나중에 체크해야될듯.
-            return CGSize(width: (frame.width - 48 - 10) / 2, height: 230 + imageHeight + textHeight)
+            return CGSize(width: (frame.width - 48 - 10) / 2, height: 230 + 0 + textHeight)
         }
 }
 

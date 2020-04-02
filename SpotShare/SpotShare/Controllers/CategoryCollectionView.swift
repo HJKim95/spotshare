@@ -812,7 +812,7 @@ class CategoryListCell: UICollectionViewCell, UICollectionViewDelegateFlowLayout
         }
         
     }
-    
+     
     fileprivate func getWeekDate() -> String {
         let now = Date()
         let dateFormater = DateFormatter()

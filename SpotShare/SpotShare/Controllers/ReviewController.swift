@@ -85,8 +85,8 @@ class ReviewController: UIViewController, UICollectionViewDelegateFlowLayout, UI
         return cv
     }()
     
-    var reviews = [Review]()
-    var reviews2 = [Review2]()
+//    var reviews = [Review]()
+//    var reviews2 = [Review2]()
     
     
     override func viewDidLoad() {
