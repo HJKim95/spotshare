@@ -182,11 +182,15 @@ class CategoryCollectionView: UIViewController, UICollectionViewDelegateFlowLayo
 //    월~토 11:30 ~ 16:00, 17:00 ~ 21:30, 일 11:30 ~ 23:00"
     fileprivate func test() {
         // 데이터 추가
-        for i in 0..<a.count {
-            let ref = Database.database().reference().child("맛집").child("맛이차이나").child("open")
-            let values = [a[i]:b[i]] as [String : Any]
-            ref.updateChildValues(values)
-        }
+//        for i in 0..<a.count {
+//            let ref = Database.database().reference().child("맛집").child("맛이차이나").child("open")
+//            let values = [a[i]:b[i]] as [String : Any]
+//            ref.updateChildValues(values)
+//        }
+        
+        let ref = Database.database().reference().child("search_keywords")
+        let values = ["카페":1] as [String : Any]
+        ref.updateChildValues(values)
         
         // 데이터 읽기
         //key는 snapshot에서 맨앞부분을 칭함.
@@ -619,11 +623,17 @@ class CategoryListCell: UICollectionViewCell, UICollectionViewDelegateFlowLayout
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: cellid, for: indexPath) as! innerSpotCell
-
-//        if indexPath.item == indexInfo - 1 && finishedPaging {
-//            getCategory_firebase(category: category ?? "Test", location: myLocation)
-//        }
+        
+        if indexPath.item == self.pagingCount - 1 && finishedPaging {
+            self.finishedPaging = false
+            self.pagingCount += 4
+            // 임시 location
+            let location = CLLocationCoordinate2D(latitude: 37.551597, longitude: 126.924976)
+            pagingStart = 0
+            getCategory_firebase(category: category ?? "Test", location: location, orderChild: saveChild, reverse: false)
+        }
         if let resinfo = categoryResInfos[category ?? "Test"]?[indexPath.item] {
+
             cell.resLabel.letterSpacing(text: resinfo.resName ?? "", spacing: -0.1)
             let point = resinfo.starPoint ?? 3.5
             cell.pointLabel.text = "\(String(describing: point))"
@@ -650,8 +660,10 @@ class CategoryListCell: UICollectionViewCell, UICollectionViewDelegateFlowLayout
             }
             cell.distanceLabel.text = distanceString
             
-            let url = URL(string: resinfo.resImageUrl ?? "")
-            cell.resImageView.sd_setImage(with: url, completed: nil)
+            if let urlString = resinfo.resImageUrl {
+                let url = URL(string: urlString)
+                cell.resImageView.sd_setImage(with: url, completed: nil)
+            }
         }
         
         //이런식으로 indexPath.item 넘겨주기.
@@ -659,7 +671,7 @@ class CategoryListCell: UICollectionViewCell, UICollectionViewDelegateFlowLayout
         cell.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(goRestaurant(sender:))))
         return cell
     }
-    
+
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         // 16(위 여백) + 97 + 9 + 18 + 1 + 16
         let width = (self.frame.width - (24+15+24) ) / 2
@@ -697,26 +709,25 @@ class CategoryListCell: UICollectionViewCell, UICollectionViewDelegateFlowLayout
     
     var category_name: String?
     
-    var allobject = [String]()
     var resInfos = [ResInfoModel]()
     let fetchCount = 13
-    
-    var countInfo = 0
-    var indexInfo = 0
-    var checkCount = 6
-    
+
     var categoryResInfos = [String:[ResInfoModel]]()
     var checkCategory: String?
-    var finishedPaging = false
     
     
     
-    // test
+    
+ 
     var AllObject = [String]()
-    var testCount = 6
+    var pagingCount = 4
+    let fixedCount = 4
+    var finishedPaging = false
     var saveChild: String = "resName"
+    var pagingStart = 0
     
     fileprivate func getCategory_firebase(category: String, location: CLLocationCoordinate2D, orderChild: String, reverse: Bool) {
+        print("Paging again!!!!")
         let ref = Database.database().reference().child(category)
         let query = ref.queryOrdered(byChild: orderChild)
         
@@ -730,12 +741,18 @@ class CategoryListCell: UICollectionViewCell, UICollectionViewDelegateFlowLayout
             snapshotCount = snapshot.children.allObjects.count
             query.observe(.childAdded, with: { [weak self] (snapshot) in
                 self?.saveChild = orderChild
-                self?.AllObject.append(snapshot.key)
-                if snapshotCount == self?.AllObject.count {
+                if self?.pagingCount == self?.fixedCount {
+                    self?.AllObject.append(snapshot.key)
+                }
+                if snapshotCount == self?.AllObject.count && self?.pagingStart == 0 {
+                    self?.pagingStart += 1
                     if reverse { self?.AllObject.reverse() }
                     // 여기서 pagination을 추후 적용하면 된다.
-                    for i in self?.AllObject ?? [""] {
-                        let resReference = Database.database().reference().child("맛집").child(i)
+//                    print(snapshotCount, self!.checkCount, self!.pagingCount)
+                    if snapshotCount - self!.pagingCount < self!.fixedCount { return }
+                    for i in (self!.pagingCount - 4)..<self!.pagingCount {
+                        guard let object = self?.AllObject[i] else {return}
+                        let resReference = Database.database().reference().child("맛집").child(object)
                         resReference.observeSingleEvent(of: .value, with: { [weak self] (snapshot) in
                             if let dictionary = snapshot.value as? [String:Any] {
                                 let resmodel = ResInfoModel()
@@ -748,33 +765,27 @@ class CategoryListCell: UICollectionViewCell, UICollectionViewDelegateFlowLayout
                                 resmodel.distance = location.distance(from: CLLocationCoordinate2D(latitude: lat, longitude: long))
                                 resmodel.locationText = (dictionary["location"] as? String)
                                 resmodel.toilet = dictionary["toilet"] as? String
+                                // 추후에 resImage 항목 새로 음식 사진으로 넣어서 받자.
+                                // FirstResImage로 받기에는 오류가 걸린다!
+                                resmodel.resImageUrl = dictionary["resBackImage"] as? String
                                 
                                 // 해당 요일에 오픈 시간들 받아오기
-                                let openReference = Database.database().reference().child("맛집").child(i).child("open").child(self?.getWeekDate() ?? "")
+                                let openReference = Database.database().reference().child("맛집").child(object).child("open").child(self?.getWeekDate() ?? "")
                                 openReference.observeSingleEvent(of: .value) { (snapshot) in
                                     if let value = snapshot.value {
                                         resmodel.open = value as? String
                                     }
                                 }
                                 
-                                let closeReference = Database.database().reference().child("맛집").child(i).child("close").child(self?.getWeekDate() ?? "")
+                                let closeReference = Database.database().reference().child("맛집").child(object).child("close").child(self?.getWeekDate() ?? "")
                                 closeReference.observeSingleEvent(of: .value) { (snapshot) in
                                     if let value = snapshot.value {
                                         resmodel.close = value as? String
                                     }
                                 }
-
-                                //   해당 맛집에서 첫번째 이미지 따오기.
-                                let firstImageReference = Database.database().reference().child("맛집").child(i).child("FirstResimage")
-                                firstImageReference.observeSingleEvent(of: .childAdded, with: { (snapshot) in
-                                    if let dictionary = snapshot.value as? [String:Any] {
-                                        resmodel.resImageUrl = dictionary["url"] as? String
-                                        
-                                    }
-                                })
                                 
-//                                 해당 맛집에서 hashtag 따오기
-                                let ref = Database.database().reference().child("맛집").child(i).child("hashTag")
+                              // 해당 맛집에서 hashtag 따오기
+                                let ref = Database.database().reference().child("맛집").child(object).child("hashTag")
                                 ref.observeSingleEvent(of: .value) { (snapshot) in
                                     if let dictionary = snapshot.value as? [String:Any] {
                                         // 만약 hashTag가 DB에 없다면 결국 최종 append가 안된다고 생각.
@@ -785,18 +796,16 @@ class CategoryListCell: UICollectionViewCell, UICollectionViewDelegateFlowLayout
                                         resmodel.hash5 = dictionary["hash5"] as? String ?? ""
                                     }
                                 }
-
+                                
                                 self?.resInfos.append(resmodel)
-                                self?.categoryResInfos[category] = self?.resInfos
-                                self?.checkCategory = category
-                                self?.countInfo += 1
-                                self?.indexInfo += 1
-                                if self?.countInfo == self?.checkCount {
-        //                                self?.finishedPaging = true
+                                if self!.resInfos.count % 4 == 0 {
+                                    self?.finishedPaging = true
                                 }
                                 else {
-        //                                self?.finishedPaging = false
+                                    self?.finishedPaging = false
                                 }
+                                self?.categoryResInfos[category] = self?.resInfos
+                                self?.checkCategory = category
                             }
                             DispatchQueue.main.async {
                                 self?.innerCategoryCollectionview.reloadData()
@@ -810,7 +819,6 @@ class CategoryListCell: UICollectionViewCell, UICollectionViewDelegateFlowLayout
                     print("@@@Failed to fetch resData_AllObject:", err)
                 }
         }
-        
     }
      
     fileprivate func getWeekDate() -> String {

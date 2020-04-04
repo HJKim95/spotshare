@@ -7,11 +7,26 @@
 //
 
 import UIKit
+import Firebase
+import GoogleMaps
 
 class SearchResultController: UIViewController, UICollectionViewDelegateFlowLayout, UICollectionViewDelegate, UICollectionViewDataSource {
     
     deinit {
         print("no retain cycle in SearchResultController")
+    }
+    
+    var searchText: String? {
+        didSet {
+            print(searchText)
+            guard let text = searchText else {return}
+            let ref = Database.database().reference().child("search_keywords")
+            ref.observe(.childAdded) { (snapshot) in
+                if text.contains(snapshot.key) {
+                    print(snapshot.key)
+                }
+            }
+        }
     }
     
     let restid = "restid"

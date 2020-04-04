@@ -77,6 +77,8 @@ class RestaurantHeaderCell: UICollectionViewCell, UICollectionViewDelegateFlowLa
         }
     }
     
+    weak var delegate: bigRestaurantCell?
+    
     let cellid = "cellid"
     let resImageid = "resImageid"
     
@@ -92,6 +94,37 @@ class RestaurantHeaderCell: UICollectionViewCell, UICollectionViewDelegateFlowLa
         cv.alwaysBounceHorizontal = true
         cv.isPagingEnabled = true
         return cv
+    }()
+    
+    lazy var backImageView: UIImageView = {
+        let iv = UIImageView()
+        iv.contentMode = .scaleAspectFit
+        iv.image = UIImage(named: "back")
+        iv.isUserInteractionEnabled = true
+        iv.tintColor = .white
+        iv.image = iv.image?.withRenderingMode(.alwaysTemplate)
+        iv.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(goBack)))
+        return iv
+    }()
+    
+    lazy var heartImageView: UIImageView = {
+        let iv = UIImageView()
+        iv.contentMode = .scaleAspectFit
+        iv.image = UIImage(named: "heartLine")
+        iv.isUserInteractionEnabled = true
+        iv.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(pressHeart)))
+        return iv
+    }()
+    
+    lazy var dotsImageView: UIImageView = {
+        let iv = UIImageView()
+        iv.contentMode = .scaleAspectFit
+        iv.image = UIImage(named: "dots")
+        iv.isUserInteractionEnabled = true
+        iv.tintColor = .white
+        iv.image = iv.image?.withRenderingMode(.alwaysTemplate)
+        iv.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(pressDots)))
+        return iv
     }()
     
     let resName: UILabel = {
@@ -201,6 +234,9 @@ class RestaurantHeaderCell: UICollectionViewCell, UICollectionViewDelegateFlowLa
     var hashtagArray = [String]()
     
     var resImageCollectionViewConstraint: NSLayoutConstraint?
+    var backImageViewConstraint: NSLayoutConstraint?
+    var heartImageViewConstraint: NSLayoutConstraint?
+    var dotsImageViewConstraint: NSLayoutConstraint?
     var resNameConstraint: NSLayoutConstraint?
     var cosmosViewConstraint: NSLayoutConstraint?
     var pointLabelConstraint: NSLayoutConstraint?
@@ -231,6 +267,10 @@ class RestaurantHeaderCell: UICollectionViewCell, UICollectionViewDelegateFlowLa
         
         
         addSubview(resImageCollectionView)
+        setupGradientLayer()
+        addSubview(backImageView)
+        addSubview(dotsImageView)
+        addSubview(heartImageView)
         addSubview(resName)
         addSubview(cosmosView)
         addSubview(pointLabel)
@@ -246,6 +286,9 @@ class RestaurantHeaderCell: UICollectionViewCell, UICollectionViewDelegateFlowLa
         
 //        let barheight = UIApplication.shared.statusBarFrame.height
         resImageCollectionViewConstraint = resImageCollectionView.anchor(self.topAnchor, left: self.leftAnchor, bottom: nil, right: self.rightAnchor, topConstant: 0, leftConstant: 0, bottomConstant: 0, rightConstant: 0, widthConstant: 0, heightConstant: frame.width - 50).first
+        backImageViewConstraint = backImageView.anchor(self.topAnchor, left: self.leftAnchor, bottom: nil, right: nil, topConstant: 24, leftConstant: 24, bottomConstant: 0, rightConstant: 0, widthConstant: 24, heightConstant: 24).first
+        dotsImageViewConstraint = dotsImageView.anchor(self.topAnchor, left: nil, bottom: nil, right: self.rightAnchor, topConstant: 24, leftConstant: 0, bottomConstant: 0, rightConstant: 24, widthConstant: 24, heightConstant: 24).first
+        heartImageViewConstraint = heartImageView.anchor(self.topAnchor, left: nil, bottom: nil, right: dotsImageView.leftAnchor, topConstant: 24, leftConstant: 0, bottomConstant: 0, rightConstant: 16, widthConstant: 24, heightConstant: 24).first
         resNameConstraint = resName.anchor(resImageCollectionView.bottomAnchor, left: self.leftAnchor, bottom: nil, right: self.rightAnchor, topConstant: 12, leftConstant: 24, bottomConstant: 0, rightConstant: 0, widthConstant: 0, heightConstant: 38).first
         //16*5 + 1*4
         cosmosViewConstraint = cosmosView.anchor(resName.bottomAnchor, left: self.leftAnchor, bottom: nil, right: nil, topConstant: 6, leftConstant: 24, bottomConstant: 0, rightConstant: 0, widthConstant: 84, heightConstant: 16).first
@@ -327,13 +370,35 @@ class RestaurantHeaderCell: UICollectionViewCell, UICollectionViewDelegateFlowLa
 //        let openInfo = ResOpenInfoView(frame: CGRect(x: 24, y: frame.width - 50 + 153 + 20, width: 150, height: 200))
 //        addSubview(openInfo)
     }
+    
+    @objc fileprivate func goBack() {
+        delegate?.goBack()
+    }
+    
+    @objc fileprivate func pressHeart() {
+        print("pressed heart")
+    }
+    
+    @objc fileprivate func pressDots() {
+        print("pressed dots")
+    }
+    
+    let gradientLayer = CAGradientLayer()
+    
+    fileprivate func setupGradientLayer() {
+        gradientLayer.colors = [UIColor.black.withAlphaComponent(0.4).cgColor, UIColor.clear.cgColor]
+        gradientLayer.locations = [0,0.5]
+        layer.addSublayer(gradientLayer)
+    }
+    override func layoutSubviews() {
+        gradientLayer.frame = resImageCollectionView.frame
+    }
 }
 
 class resImageCell: UICollectionViewCell {
     
     let resImageView: UIImageView = {
         let iv = UIImageView()
-//        iv.image = UIImage(named: "imsi_restaurant")
         iv.contentMode = .scaleAspectFill
         iv.layer.masksToBounds = true
         return iv

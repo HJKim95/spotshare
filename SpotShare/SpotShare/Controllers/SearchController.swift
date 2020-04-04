@@ -192,9 +192,9 @@ class SearchController: BottomPopupViewController, UICollectionViewDelegateFlowL
         
     }
     
-    @objc fileprivate func goSearchResult() {
+    @objc fileprivate func goSearchResult(searchText: String) {
         self.dismiss(animated: true) {
-            self.delegate?.goSearchResult()
+            self.delegate?.goSearchResult(searchText: searchText)
         }
     }
     
@@ -208,9 +208,10 @@ class SearchController: BottomPopupViewController, UICollectionViewDelegateFlowL
     
     
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
-        let text = textField.text
-        print(text)
-        goSearchResult()
+        // 검색 버튼 눌렀을때.
+        if let text = textField.text {
+            goSearchResult(searchText: text)
+        }
         return true
     }
     

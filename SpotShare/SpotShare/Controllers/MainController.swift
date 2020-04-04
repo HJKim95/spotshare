@@ -20,7 +20,7 @@ protocol circleDelegate {
 }
 
 protocol searchDelegate {
-    func goSearchResult()
+    func goSearchResult(searchText: String)
 }
 
 class MainController: UIViewController, UICollectionViewDelegateFlowLayout, UICollectionViewDelegate, UICollectionViewDataSource, circleDelegate, searchDelegate {
@@ -302,8 +302,9 @@ class MainController: UIViewController, UICollectionViewDelegateFlowLayout, UICo
         self.navigationController?.pushViewController(innerMagazine, animated: true)
     }
     
-    func goSearchResult() {
+    func goSearchResult(searchText: String) {
         let searchResult = SearchResultController()
+        searchResult.searchText = searchText
         self.navigationController?.pushViewController(searchResult, animated: true)
     }
     

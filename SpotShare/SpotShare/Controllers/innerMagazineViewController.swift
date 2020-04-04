@@ -82,6 +82,7 @@ class innerMagazineViewController: UIViewController, UICollectionViewDelegateFlo
         infoMagazineCollectionView.register(innerMagazineInfoCell.self, forCellWithReuseIdentifier: cellid)
         
         view.addSubview(infoMagazineCollectionView)
+        setupGradientLayer()
         view.addSubview(backImageView)
         view.addSubview(shareImageView)
         
@@ -198,6 +199,17 @@ class innerMagazineViewController: UIViewController, UICollectionViewDelegateFlo
         print("pressed share button")
     }
     
+    let gradientLayer = CAGradientLayer()
+    
+    fileprivate func setupGradientLayer() {
+        gradientLayer.colors = [UIColor.black.withAlphaComponent(0.4).cgColor, UIColor.clear.cgColor]
+        gradientLayer.locations = [0,0.25]
+        view.layer.addSublayer(gradientLayer)
+    }
+    
+    override func viewDidLayoutSubviews() {
+        gradientLayer.frame = infoMagazineCollectionView.frame
+    }
 
 }
 

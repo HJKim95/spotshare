@@ -145,90 +145,6 @@ class RestaurantViewController: UIViewController, UICollectionViewDelegateFlowLa
 }
 
 
-
-class dummyRestaurantClearCell: UICollectionViewCell {
-    
-    weak var delegate: RestaurantViewController?
-  
-    lazy var backImageView: UIImageView = {
-        let iv = UIImageView()
-        iv.contentMode = .scaleAspectFit
-        iv.image = UIImage(named: "back")
-        iv.isUserInteractionEnabled = true
-        iv.tintColor = .white
-        iv.image = iv.image?.withRenderingMode(.alwaysTemplate)
-        iv.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(goBack)))
-        return iv
-    }()
-    
-    lazy var heartImageView: UIImageView = {
-        let iv = UIImageView()
-        iv.contentMode = .scaleAspectFit
-        iv.image = UIImage(named: "heartLine")
-        iv.isUserInteractionEnabled = true
-        iv.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(pressHeart)))
-        return iv
-    }()
-    
-    lazy var dotsImageView: UIImageView = {
-        let iv = UIImageView()
-        iv.contentMode = .scaleAspectFit
-        iv.image = UIImage(named: "dots")
-        iv.isUserInteractionEnabled = true
-        iv.tintColor = .white
-        iv.image = iv.image?.withRenderingMode(.alwaysTemplate)
-        iv.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(pressDots)))
-        return iv
-    }()
-    
-    
-    override init(frame: CGRect) {
-        super.init(frame: frame)
-        setupLayouts()
-    }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
-    
-    var backImageViewConstraint: NSLayoutConstraint?
-    var heartImageViewConstraint: NSLayoutConstraint?
-    var dotsImageViewConstraint: NSLayoutConstraint?
-    
-    var gradient =  CAGradientLayer()
-    
-    fileprivate func setupLayouts() {
-        backgroundColor = .clear
-        
-        
-        addSubview(backImageView)
-        addSubview(dotsImageView)
-        addSubview(heartImageView)
-        
-        
-        backImageViewConstraint = backImageView.anchor(self.topAnchor, left: self.leftAnchor, bottom: nil, right: nil, topConstant: 0, leftConstant: 24, bottomConstant: 0, rightConstant: 0, widthConstant: 24, heightConstant: 24).first
-        dotsImageViewConstraint = dotsImageView.anchor(self.topAnchor, left: nil, bottom: nil, right: self.rightAnchor, topConstant: 0, leftConstant: 0, bottomConstant: 0, rightConstant: 24, widthConstant: 24, heightConstant: 24).first
-        heartImageViewConstraint = heartImageView.anchor(self.topAnchor, left: nil, bottom: nil, right: dotsImageView.leftAnchor, topConstant: 0, leftConstant: 0, bottomConstant: 0, rightConstant: 16, widthConstant: 24, heightConstant: 24).first
-        
-        
-    }
-
-    @objc fileprivate func goBack() {
-        delegate?.goBack()
-    }
-    
-    @objc fileprivate func pressHeart() {
-        print("pressed heart")
-    }
-    
-    @objc fileprivate func pressDots() {
-        print("pressed dots")
-    }
-    
-}
-
-
 class bigRestaurantCell: UICollectionViewCell, UICollectionViewDelegateFlowLayout, UICollectionViewDelegate, UICollectionViewDataSource {
     
     fileprivate let cellid = "cellid"
@@ -293,6 +209,7 @@ class bigRestaurantCell: UICollectionViewCell, UICollectionViewDelegateFlowLayou
             if indexPath.item == 0 {
                 let cell = collectionView.dequeueReusableCell(withReuseIdentifier: cellid, for: indexPath) as! RestaurantHeaderCell
                 cell.resinfo = resinfo
+                cell.delegate = self
                 return cell
             }
 
@@ -320,6 +237,10 @@ class bigRestaurantCell: UICollectionViewCell, UICollectionViewDelegateFlowLayou
     
     func goImproveListing() {
         delegate?.goImproveListing()
+    }
+    
+    func goBack() {
+        delegate?.goBack()
     }
 
     
