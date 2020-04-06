@@ -68,15 +68,8 @@ class RestaurantViewController: UIViewController, UICollectionViewDelegateFlowLa
         
         infoCollectionViewConstraint = infoCollectionView.anchor(view.topAnchor, left: view.leftAnchor, bottom: view.bottomAnchor, right: view.rightAnchor, topConstant: 0, leftConstant: 0, bottomConstant: 0, rightConstant: 0, widthConstant: 0, heightConstant: 0).first
         myRestaurantBarConstraint = myRestaurantBar.anchor(nil, left: view.leftAnchor, bottom: view.bottomAnchor, right: nil, topConstant: 0, leftConstant: (view.frame.width / 2) - (resBarWidth / 2), bottomConstant: 50, rightConstant: 0, widthConstant: resBarWidth, heightConstant: 36).first
-        //        blackView.setGradientBackgroundVertical(gradientLayer: gradient, colorOne:UIColor(white: 0, alpha: 0.6), colorTwo: UIColor(white: 0, alpha: 0))
     }
-    
-    // autolayout 사용시에는 gradient 설정하고 밑에 viewDidLayoutSubviews를 설정해주어야함.
-//    override func viewDidLayoutSubviews() {
-//        super.viewDidLayoutSubviews()
-//        gradient.frame = footButtons.bounds
-//    }
-    
+
     func scrollToMenuIndex(menuIndex: Int) {
             let indexPath = NSIndexPath(item: menuIndex, section: 0)
             infoCollectionView.scrollToItem(at: indexPath as IndexPath, at: [], animated: true)

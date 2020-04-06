@@ -623,10 +623,10 @@ class CategoryListCell: UICollectionViewCell, UICollectionViewDelegateFlowLayout
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: cellid, for: indexPath) as! innerSpotCell
-        
+//        print(indexPath.item, "indexPath", self.pagingCount, "pagingCount", finishedPaging, "finishedPaging")
         if indexPath.item == self.pagingCount - 1 && finishedPaging {
             self.finishedPaging = false
-            self.pagingCount += 4
+            self.pagingCount += self.fixedCount
             // 임시 location
             let location = CLLocationCoordinate2D(latitude: 37.551597, longitude: 126.924976)
             pagingStart = 0
@@ -671,6 +671,7 @@ class CategoryListCell: UICollectionViewCell, UICollectionViewDelegateFlowLayout
         cell.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(goRestaurant(sender:))))
         return cell
     }
+    
 
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         // 16(위 여백) + 97 + 9 + 18 + 1 + 16
@@ -720,14 +721,21 @@ class CategoryListCell: UICollectionViewCell, UICollectionViewDelegateFlowLayout
     
  
     var AllObject = [String]()
-    var pagingCount = 4
-    let fixedCount = 4
+    // pagingCount ==> paging 주요 변수
+    var pagingCount = 3
+    // fixedCount ==> 고정 paging 수(얼마씩 paging 할것인가?)
+    let fixedCount = 3
     var finishedPaging = false
+    // saveChild ==> category 저장용. (위에 filter 눌렀을때 바뀌는거 check 용)
     var saveChild: String = "resName"
+    // pagingStart ==> 같은 category에서 paging할때 오류 제거용
     var pagingStart = 0
+    var checkPagingCount = 1
     
     fileprivate func getCategory_firebase(category: String, location: CLLocationCoordinate2D, orderChild: String, reverse: Bool) {
-        print("Paging again!!!!")
+        // function 몇번 했는지 확인.
+        print("Paging operating..", checkPagingCount, "번")
+        checkPagingCount += 1
         let ref = Database.database().reference().child(category)
         let query = ref.queryOrdered(byChild: orderChild)
         
@@ -735,90 +743,101 @@ class CategoryListCell: UICollectionViewCell, UICollectionViewDelegateFlowLayout
         if self.saveChild != orderChild {
             self.AllObject.removeAll()
             self.resInfos.removeAll()
+            self.pagingCount = fixedCount
         }
         // value로 해야 first children의 count 총합을 구할수있다.
         query.observeSingleEvent(of: .value) { (snapshot) in
             snapshotCount = snapshot.children.allObjects.count
+//            print(snapshotCount, "snapshot count")
             query.observe(.childAdded, with: { [weak self] (snapshot) in
                 self?.saveChild = orderChild
                 if self?.pagingCount == self?.fixedCount {
+                    // 처음 firebase 받아올때.
                     self?.AllObject.append(snapshot.key)
                 }
+                // firebase에서 해당 맛집들 다 가져왔을 때 실행. or 기존에서 paging할때 한번만 할수있게.
                 if snapshotCount == self?.AllObject.count && self?.pagingStart == 0 {
+                    // pagination 할때 반복되지 않기 위함..
                     self?.pagingStart += 1
                     if reverse { self?.AllObject.reverse() }
                     // 여기서 pagination을 추후 적용하면 된다.
-//                    print(snapshotCount, self!.checkCount, self!.pagingCount)
-                    if snapshotCount - self!.pagingCount < self!.fixedCount { return }
-                    for i in (self!.pagingCount - 4)..<self!.pagingCount {
+//                    print(snapshotCount, "snapshot count",self!.pagingCount, "pagingcount")
+                    if snapshotCount - (self!.pagingCount - self!.fixedCount) < self!.fixedCount { return }
+                    for i in (self!.pagingCount - self!.fixedCount)..<self!.pagingCount {
                         guard let object = self?.AllObject[i] else {return}
-                        let resReference = Database.database().reference().child("맛집").child(object)
-                        resReference.observeSingleEvent(of: .value, with: { [weak self] (snapshot) in
-                            if let dictionary = snapshot.value as? [String:Any] {
-                                let resmodel = ResInfoModel()
-                                
-                                resmodel.resName = dictionary["resName"] as? String
-                                resmodel.starPoint = dictionary["resPoints"] as? Double
-                                guard let lat = (dictionary["lat"] as? CLLocationDegrees) else {return}
-                                guard let long = (dictionary["long"] as? CLLocationDegrees) else {return}
-                                resmodel.resLocation = CLLocationCoordinate2D(latitude: lat, longitude: long)
-                                resmodel.distance = location.distance(from: CLLocationCoordinate2D(latitude: lat, longitude: long))
-                                resmodel.locationText = (dictionary["location"] as? String)
-                                resmodel.toilet = dictionary["toilet"] as? String
-                                // 추후에 resImage 항목 새로 음식 사진으로 넣어서 받자.
-                                // FirstResImage로 받기에는 오류가 걸린다!
-                                resmodel.resImageUrl = dictionary["resBackImage"] as? String
-                                
-                                // 해당 요일에 오픈 시간들 받아오기
-                                let openReference = Database.database().reference().child("맛집").child(object).child("open").child(self?.getWeekDate() ?? "")
-                                openReference.observeSingleEvent(of: .value) { (snapshot) in
-                                    if let value = snapshot.value {
-                                        resmodel.open = value as? String
-                                    }
-                                }
-                                
-                                let closeReference = Database.database().reference().child("맛집").child(object).child("close").child(self?.getWeekDate() ?? "")
-                                closeReference.observeSingleEvent(of: .value) { (snapshot) in
-                                    if let value = snapshot.value {
-                                        resmodel.close = value as? String
-                                    }
-                                }
-                                
-                              // 해당 맛집에서 hashtag 따오기
-                                let ref = Database.database().reference().child("맛집").child(object).child("hashTag")
-                                ref.observeSingleEvent(of: .value) { (snapshot) in
-                                    if let dictionary = snapshot.value as? [String:Any] {
-                                        // 만약 hashTag가 DB에 없다면 결국 최종 append가 안된다고 생각.
-                                        resmodel.hash1 = dictionary["hash1"] as? String ?? ""
-                                        resmodel.hash2 = dictionary["hash2"] as? String ?? ""
-                                        resmodel.hash3 = dictionary["hash3"] as? String ?? ""
-                                        resmodel.hash4 = dictionary["hash4"] as? String ?? ""
-                                        resmodel.hash5 = dictionary["hash5"] as? String ?? ""
-                                    }
-                                }
-                                
-                                self?.resInfos.append(resmodel)
-                                if self!.resInfos.count % 4 == 0 {
-                                    self?.finishedPaging = true
-                                }
-                                else {
-                                    self?.finishedPaging = false
-                                }
-                                self?.categoryResInfos[category] = self?.resInfos
-                                self?.checkCategory = category
-                            }
-                            DispatchQueue.main.async {
-                                self?.innerCategoryCollectionview.reloadData()
-                            }
-                        }) { (err) in
-                            print("Failed to fetch resData:", err)
-                        }
+//                        print(object)
+                        self?.getResData_firebase(resName: object, category: category, location: location)
                     }
                 }
                 }) { (err) in
                     print("@@@Failed to fetch resData_AllObject:", err)
                 }
         }
+    }
+    
+    fileprivate func getResData_firebase(resName: String, category: String, location: CLLocationCoordinate2D) {
+        let resReference = Database.database().reference().child("맛집").child(resName)
+        resReference.observeSingleEvent(of: .value, with: { [weak self] (snapshot) in
+            if let dictionary = snapshot.value as? [String:Any] {
+                let resmodel = ResInfoModel()
+                
+                resmodel.resName = dictionary["resName"] as? String
+                resmodel.starPoint = dictionary["resPoints"] as? Double
+                guard let lat = (dictionary["lat"] as? CLLocationDegrees) else {return}
+                guard let long = (dictionary["long"] as? CLLocationDegrees) else {return}
+                resmodel.resLocation = CLLocationCoordinate2D(latitude: lat, longitude: long)
+                resmodel.distance = location.distance(from: CLLocationCoordinate2D(latitude: lat, longitude: long))
+                resmodel.locationText = (dictionary["location"] as? String)
+                resmodel.toilet = dictionary["toilet"] as? String
+                // 추후에 resImage 항목 새로 음식 사진으로 넣어서 받자.
+                // FirstResImage로 받기에는 오류가 걸린다!
+                resmodel.resImageUrl = dictionary["resBackImage"] as? String
+                
+                // 해당 요일에 오픈 시간들 받아오기
+                let openReference = Database.database().reference().child("맛집").child(resName).child("open").child(self?.getWeekDate() ?? "")
+                openReference.observeSingleEvent(of: .value) { (snapshot) in
+                    if let value = snapshot.value {
+                        resmodel.open = value as? String
+                    }
+                }
+                
+                let closeReference = Database.database().reference().child("맛집").child(resName).child("close").child(self?.getWeekDate() ?? "")
+                closeReference.observeSingleEvent(of: .value) { (snapshot) in
+                    if let value = snapshot.value {
+                        resmodel.close = value as? String
+                    }
+                }
+                
+              // 해당 맛집에서 hashtag 따오기
+                let ref = Database.database().reference().child("맛집").child(resName).child("hashTag")
+                ref.observeSingleEvent(of: .value) { (snapshot) in
+                    if let dictionary = snapshot.value as? [String:Any] {
+                        // 만약 hashTag가 DB에 없다면 결국 최종 append가 안된다고 생각.
+                        resmodel.hash1 = dictionary["hash1"] as? String ?? ""
+                        resmodel.hash2 = dictionary["hash2"] as? String ?? ""
+                        resmodel.hash3 = dictionary["hash3"] as? String ?? ""
+                        resmodel.hash4 = dictionary["hash4"] as? String ?? ""
+                        resmodel.hash5 = dictionary["hash5"] as? String ?? ""
+                    }
+                }
+                
+                self?.resInfos.append(resmodel)
+                if self!.resInfos.count % self!.fixedCount == 0 {
+                    self?.finishedPaging = true
+                }
+                else {
+                    self?.finishedPaging = false
+                }
+                self?.categoryResInfos[category] = self?.resInfos
+                self?.checkCategory = category
+            }
+            DispatchQueue.main.async {
+                self?.innerCategoryCollectionview.reloadData()
+            }
+        }) { (err) in
+            print("Failed to fetch resData:", err)
+        }
+
     }
      
     fileprivate func getWeekDate() -> String {

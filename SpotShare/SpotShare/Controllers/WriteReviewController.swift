@@ -8,8 +8,11 @@
 
 import UIKit
 import Cosmos
+import YPImagePicker
+
 // https://github.com/ergunemr/BottomPopup
 // https://github.com/evgenyneu/Cosmos
+// https://github.com/Yummypets/YPImagePicker
 
 class WriteReviewController: BottomPopupViewController, UICollectionViewDelegateFlowLayout, UICollectionViewDelegate, UICollectionViewDataSource {
     
@@ -88,11 +91,13 @@ class WriteReviewController: BottomPopupViewController, UICollectionViewDelegate
         return viewview
     }()
     
-    let firstCircle: UIView = {
+    lazy var firstCircle: UIView = {
         let viewview = UIView()
         viewview.backgroundColor = UIColor.mainColor
         viewview.layer.cornerRadius = 24
         viewview.layer.masksToBounds = true
+        viewview.isUserInteractionEnabled = true
+        viewview.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(goBackCellFirst)))
         return viewview
     }()
     
@@ -103,11 +108,13 @@ class WriteReviewController: BottomPopupViewController, UICollectionViewDelegate
         return iv
     }()
     
-    let secondCircle: UIView = {
+    lazy var secondCircle: UIView = {
         let viewview = UIView()
         viewview.backgroundColor = UIColor.rgb(red: 232, green: 232, blue: 232)
         viewview.layer.cornerRadius = 24
         viewview.layer.masksToBounds = true
+        viewview.isUserInteractionEnabled = true
+        viewview.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(goBackCellSecond)))
         return viewview
     }()
     
@@ -118,11 +125,13 @@ class WriteReviewController: BottomPopupViewController, UICollectionViewDelegate
         return iv
     }()
     
-    let thirdCircle: UIView = {
+    lazy var thirdCircle: UIView = {
         let viewview = UIView()
         viewview.backgroundColor = UIColor.rgb(red: 232, green: 232, blue: 232)
         viewview.layer.cornerRadius = 24
         viewview.layer.masksToBounds = true
+        viewview.isUserInteractionEnabled = true
+        viewview.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(goBackCellThird)))
         return viewview
     }()
     
@@ -133,7 +142,7 @@ class WriteReviewController: BottomPopupViewController, UICollectionViewDelegate
         return iv
     }()
     
-    let fourthCircle: UIView = {
+    var fourthCircle: UIView = {
         let viewview = UIView()
         viewview.backgroundColor = UIColor.rgb(red: 232, green: 232, blue: 232)
         viewview.layer.cornerRadius = 24
@@ -267,16 +276,76 @@ class WriteReviewController: BottomPopupViewController, UICollectionViewDelegate
         changeCircleBackground(index: index)
     }
     
+    fileprivate func keyboardViewUp() {
+        UIView.animate(withDuration: 0.5, delay: 0, usingSpringWithDamping: 1, initialSpringVelocity: 1, options: .curveEaseInOut, animations: {
+            self.view.frame.origin.y -= 50
+        }, completion: nil)
+    }
+    
+    fileprivate func keyboardViewDown() {
+        UIView.animate(withDuration: 0.5, delay: 0,
+                       usingSpringWithDamping: 1, initialSpringVelocity: 1, options: .curveEaseInOut, animations: {
+            self.view.frame.origin.y = 70
+        }, completion: nil)
+    }
+    
+    @objc fileprivate func goBackCellFirst() {
+        let indexPath = IndexPath(item: 0, section: 0)
+        reviewCollectionview.scrollToItem(at: indexPath, at: .centeredHorizontally, animated: true)
+        grayCircleBackground(index: 0)
+        grayCircleBackground(index: 1)
+        grayCircleBackground(index: 2)
+        secondCircle.tag = 0
+        thirdCircle.tag = 0
+        fourthCircle.tag = 0
+    }
+    
+    @objc fileprivate func goBackCellSecond() {
+        if thirdCircle.tag == 1 {
+            thirdCircle.tag = 0
+            fourthCircle.tag = 0
+            let indexPath = IndexPath(item: 1, section: 0)
+            reviewCollectionview.scrollToItem(at: indexPath, at: .centeredHorizontally, animated: true)
+            grayCircleBackground(index: 1)
+            grayCircleBackground(index: 2)
+        }
+    }
+    
+    @objc fileprivate func goBackCellThird() {
+        if fourthCircle.tag == 1 {
+            fourthCircle.tag = 0
+            let indexPath = IndexPath(item: 2, section: 0)
+            reviewCollectionview.scrollToItem(at: indexPath, at: .centeredHorizontally, animated: true)
+            grayCircleBackground(index: 2)
+        }
+    }
+    
     fileprivate func changeCircleBackground(index: Int) {
         if index == 0 {
             self.secondCircle.backgroundColor = .wheat
+            self.secondCircle.tag = 1
         }
         else if index == 1 {
             self.thirdCircle.backgroundColor = .lightGreen
+            self.thirdCircle.tag = 1
         }
         
         else if index == 2 {
             self.fourthCircle.backgroundColor = .apricot
+            self.fourthCircle.tag = 1
+        }
+    }
+    
+    fileprivate func grayCircleBackground(index: Int) {
+        if index == 0 {
+            self.secondCircle.backgroundColor = UIColor.rgb(red: 232, green: 232, blue: 232)
+        }
+        else if index == 1 {
+            self.thirdCircle.backgroundColor = UIColor.rgb(red: 232, green: 232, blue: 232)
+        }
+        
+        else if index == 2 {
+            self.fourthCircle.backgroundColor = UIColor.rgb(red: 232, green: 232, blue: 232)
         }
     }
     
@@ -296,9 +365,57 @@ class WriteReviewController: BottomPopupViewController, UICollectionViewDelegate
         self.dismiss(animated: true, completion: nil)
     }
     
+    func selectPhoto() {
+        var config = YPImagePickerConfiguration()
+        config.albumName = "DefaultYPImagePickerAlbumName"
+        config.startOnScreen = YPPickerScreen.photo
+        config.screens = [.library]
+        config.showsCrop = .none
+//        config.targetImageSize = YPImageSize.original
+        config.overlayView = UIView()
+        config.hidesStatusBar = true
+        config.hidesBottomBar = false
+        config.preferredStatusBarStyle = UIStatusBarStyle.default
+//        config.bottomMenuItemSelectedColour = UIColor(r: 38, g: 38, b: 38)
+//        config.bottomMenuItemUnSelectedColour = UIColor(r: 153, g: 153, b: 153)
+        config.library.options = nil
+        config.library.onlySquare = false
+        config.library.isSquareByDefault = true
+        config.library.minWidthForItem = nil
+        config.library.mediaType = YPlibraryMediaType.photo
+        config.library.defaultMultipleSelection = true
+        config.library.maxNumberOfItems = 5
+        config.library.minNumberOfItems = 1
+        config.library.numberOfItemsInRow = 4
+        config.library.spacingBetweenItems = 1.0
+        config.library.skipSelectionsGallery = false
+        config.library.preselectedItems = nil
+        let picker = YPImagePicker(configuration: config)
+        present(picker, animated: true)
+        // photo selecting finished
+        picker.didFinishPicking { [unowned picker] items, cancelled in
+            for item in items {
+                switch item {
+                case .photo(let photo):
+                    print(photo, "111222333")
+                case .video(let video):
+                    print(video)
+                }
+            }
+            picker.dismiss(animated: true, completion: nil)
+        }
+        // photo selecting canceled
+        picker.didFinishPicking { [unowned picker] items, cancelled in
+            if cancelled {
+                print("Picker was canceled")
+            }
+            picker.dismiss(animated: true, completion: nil)
+        }
+    }
+    
 }
 
-class firstWriteReviewCell: UICollectionViewCell, UICollectionViewDelegateFlowLayout, UICollectionViewDelegate, UICollectionViewDataSource {
+class firstWriteReviewCell: UICollectionViewCell, UICollectionViewDelegateFlowLayout, UICollectionViewDelegate, UICollectionViewDataSource, UITextFieldDelegate {
     
     var index: Int = 0
     weak var delegate: WriteReviewController?
@@ -307,10 +424,7 @@ class firstWriteReviewCell: UICollectionViewCell, UICollectionViewDelegateFlowLa
     
     let titleLabel: UILabel = {
         let lb = UILabel()
-        // letter spacing -0.3
-        let attributedString = NSMutableAttributedString(string: "Where to review?")
-        attributedString.addAttribute(NSAttributedString.Key.kern, value: CGFloat(-0.3), range: NSRange(location: 0, length: attributedString.length))
-        lb.attributedText = attributedString
+        lb.letterSpacing(text: "Where to review?", spacing: -0.3)
         lb.font = UIFont(name: "DMSans-Medium", size: 20)
         lb.textColor = .black
         lb.textAlignment = .center
@@ -320,10 +434,7 @@ class firstWriteReviewCell: UICollectionViewCell, UICollectionViewDelegateFlowLa
     
     let subtitleLabel: UILabel = {
         let lb = UILabel()
-        // letter spacing -0.1
-        let attributedString = NSMutableAttributedString(string: "Lorem ipsum dolor sit amet, consectetur adipiscing elit duis eu.")
-        attributedString.addAttribute(NSAttributedString.Key.kern, value: CGFloat(-0.1), range: NSRange(location: 0, length: attributedString.length))
-        lb.attributedText = attributedString
+        lb.letterSpacing(text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit duis eu.", spacing: -0.1)
         lb.font = UIFont(name: "DMSans-Regular", size: 16)
         lb.textColor = .lightGray
         lb.textAlignment = .center
@@ -352,10 +463,7 @@ class firstWriteReviewCell: UICollectionViewCell, UICollectionViewDelegateFlowLa
     
     let searchLabel: UILabel = {
         let lb = UILabel()
-        // letter spacing -0.1
-        let attributedString = NSMutableAttributedString(string: "Search a place to review...")
-        attributedString.addAttribute(NSAttributedString.Key.kern, value: CGFloat(-0.1), range: NSRange(location: 0, length: attributedString.length))
-        lb.attributedText = attributedString
+        lb.letterSpacing(text: "Search a place to review...", spacing: -0.1)
         lb.font = UIFont(name: "DMSans-Regular", size: 14)
         lb.textColor = UIColor.rgb(red: 153, green: 153, blue: 153)
         lb.textAlignment = .left
@@ -365,10 +473,7 @@ class firstWriteReviewCell: UICollectionViewCell, UICollectionViewDelegateFlowLa
     
     lazy var nextLabel: UILabel = {
         let lb = UILabel()
-        // letter spacing 1.0
-        let attributedString = NSMutableAttributedString(string: "NEXT")
-        attributedString.addAttribute(NSAttributedString.Key.kern, value: CGFloat(1.0), range: NSRange(location: 0, length: attributedString.length))
-        lb.attributedText = attributedString
+        lb.letterSpacing(text: "NEXT", spacing: 1.0)
         lb.font = UIFont(name: "DMSans-Bold", size: 14)
         lb.textColor = .white
         lb.backgroundColor = .mainColor
@@ -404,23 +509,8 @@ class firstWriteReviewCell: UICollectionViewCell, UICollectionViewDelegateFlowLa
         iv.contentMode = .scaleAspectFit
         iv.alpha = 0
         iv.isUserInteractionEnabled = true
-        // 우선 임시로 이렇게하지만 추후에 다르게 해주어야함.
-        iv.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(restClicked)))
+        iv.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(backClicked)))
         return iv
-    }()
-    
-    let searchLabel2: UILabel = {
-        let lb = UILabel()
-        // letter spacing -0.1
-        let attributedString = NSMutableAttributedString(string: "Cool Restaurant")
-        attributedString.addAttribute(NSAttributedString.Key.kern, value: CGFloat(-0.1), range: NSRange(location: 0, length: attributedString.length))
-        lb.attributedText = attributedString
-        lb.font = UIFont(name: "DMSans-Regular", size: 14)
-        lb.textColor = .black
-        lb.textAlignment = .left
-        lb.numberOfLines = 0
-        lb.alpha = 0
-        return lb
     }()
     
     lazy var innerWriteCollectionview: UICollectionView = {
@@ -436,6 +526,56 @@ class firstWriteReviewCell: UICollectionViewCell, UICollectionViewDelegateFlowLa
         collectionview.alpha = 0
         return collectionview
     }()
+    
+    var dividerLineConstraint: NSLayoutConstraint?
+    var clearButtonConstraint: NSLayoutConstraint?
+    var closeButtonConstraint: NSLayoutConstraint?
+    
+    lazy var contatinerView: UIView = {
+        let containerview = UIView()
+        containerview.backgroundColor = .white
+        containerview.frame = CGRect(x: 0, y: 0, width: 100, height: 40)
+        
+        let dividerLine = UIView()
+        dividerLine.backgroundColor = UIColor(white: 0.4, alpha: 0.4)
+        containerview.addSubview(dividerLine)
+        dividerLineConstraint = dividerLine.anchor(containerview.topAnchor, left: containerview.leftAnchor, bottom: nil, right: containerview.rightAnchor, topConstant: 0, leftConstant: 0, bottomConstant: 0, rightConstant: 0, widthConstant: 0, heightConstant: 0.5).first
+        
+        let clearButton = UIButton(type: .system)
+        clearButton.setTitle("CLEAR", for: .normal)
+        clearButton.setTitleColor(.gray, for: .normal)
+        clearButton.titleLabel?.font = UIFont(name: "DMSans-Medium", size: 12)
+        clearButton.addTarget(self, action: #selector(clearText), for: .touchUpInside)
+        containerview.addSubview(clearButton)
+        clearButtonConstraint = clearButton.anchor(containerview.topAnchor, left: containerview.leftAnchor, bottom: containerview.bottomAnchor, right: nil, topConstant: 0, leftConstant: 12, bottomConstant: 0, rightConstant: 0, widthConstant: 50, heightConstant: 0).first
+        
+        let closeButton = UIButton(type: .system)
+        closeButton.setTitle("CLOSE", for: .normal)
+        closeButton.setTitleColor(.gray, for: .normal)
+        closeButton.titleLabel?.font = UIFont(name: "DMSans-Bold", size: 12)
+        closeButton.addTarget(self, action: #selector(closeText), for: .touchUpInside)
+        containerview.addSubview(closeButton)
+        closeButtonConstraint = closeButton.anchor(containerview.topAnchor, left: nil, bottom: containerview.bottomAnchor, right: containerview.rightAnchor, topConstant: 0, leftConstant: 0, bottomConstant: 0, rightConstant: 12, widthConstant: 50, heightConstant: 0).first
+        return containerview
+    }()
+    
+    lazy var searchTextField: UITextField = {
+        let tf = UITextField()
+        tf.placeholder = "검색어를 입력하세요"
+        tf.font = UIFont(name: "DMSans-Regular", size: 14)
+        tf.returnKeyType = .search
+        tf.autocorrectionType = .no
+        tf.autocapitalizationType = .none
+        tf.delegate = self
+        tf.alpha = 0
+        return tf
+    }()
+    
+    override var inputAccessoryView: UIView? {
+        get {
+            return contatinerView
+        }
+    }
     
     
     override init(frame: CGRect) {
@@ -454,6 +594,7 @@ class firstWriteReviewCell: UICollectionViewCell, UICollectionViewDelegateFlowLa
     var searchLabelConstraint: NSLayoutConstraint?
     var nextLabelConstraint: NSLayoutConstraint?
     
+    var searchTextFieldConstraint: NSLayoutConstraint?
     var backWhiteViewConstraint: NSLayoutConstraint?
     var searchView2Constraint: NSLayoutConstraint?
     var backImageViewConstraint: NSLayoutConstraint?
@@ -473,7 +614,7 @@ class firstWriteReviewCell: UICollectionViewCell, UICollectionViewDelegateFlowLa
         addSubview(backWhiteView)
         addSubview(searchView2)
         addSubview(backImageView)
-        addSubview(searchLabel2)
+        addSubview(searchTextField)
         addSubview(innerWriteCollectionview)
         
         titleLabelConstraint = titleLabel.anchor(self.topAnchor, left: self.leftAnchor, bottom: nil, right: self.rightAnchor, topConstant: 0, leftConstant: 0, bottomConstant: 0, rightConstant: 0, widthConstant: 0, heightConstant: 28).first
@@ -486,22 +627,56 @@ class firstWriteReviewCell: UICollectionViewCell, UICollectionViewDelegateFlowLa
         backWhiteViewConstraint = backWhiteView.anchor(self.topAnchor, left: self.leftAnchor, bottom: self.bottomAnchor, right: self.rightAnchor, topConstant: 0, leftConstant: 0, bottomConstant: 0, rightConstant: 0, widthConstant: 0, heightConstant: 0).first
         searchView2Constraint = searchView2.anchor(self.topAnchor, left: self.leftAnchor, bottom: nil, right: self.rightAnchor, topConstant: 0, leftConstant: 24, bottomConstant: 0, rightConstant: 24, widthConstant: 0, heightConstant: 48).first
         backImageViewConstraint = backImageView.anchor(searchView2.topAnchor, left: searchView2.leftAnchor, bottom: nil, right: nil, topConstant: 12, leftConstant: 12, bottomConstant: 0, rightConstant: 0, widthConstant: 24, heightConstant: 24).first
-        searchLabel2Constraint = searchLabel2.anchor(searchView2.topAnchor, left: backImageView.rightAnchor, bottom: nil, right: nil, topConstant: 14, leftConstant: 9, bottomConstant: 0, rightConstant: 0, widthConstant: 0, heightConstant: 20).first
+        searchTextFieldConstraint = searchTextField.anchor(searchView2.topAnchor, left: backImageView.rightAnchor, bottom: nil, right: nil, topConstant: 14, leftConstant: 9, bottomConstant: 0, rightConstant: 0, widthConstant: 0, heightConstant: 20).first
         innerWriteCollectionviewConstraint = innerWriteCollectionview.anchor(searchView2.bottomAnchor, left: self.leftAnchor, bottom: self.bottomAnchor, right: self.rightAnchor, topConstant: 24, leftConstant: 24, bottomConstant: 100, rightConstant: 24, widthConstant: 0, heightConstant: 0).first
         
         innerWriteCollectionview.register(innerFirstWriteCell.self, forCellWithReuseIdentifier: cellid)
     }
     
+    @objc fileprivate func goSearchResult(searchText: String) {
+//        self.dismiss(animated: true) {
+//            self.delegate?.goSearchResult(searchText: searchText)
+//        }
+    }
+    
+    @objc fileprivate func clearText() {
+        self.searchTextField.text = nil
+    }
+    
+    @objc func closeText() {
+        self.searchTextField.endEditing(true)
+    }
+    
+    
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        // 검색 버튼 눌렀을때.
+        textField.endEditing(true)
+        return true
+    }
+    
     @objc fileprivate func goNextCell() {
-        delegate?.goNextCell(index: index)
+        if searchLabel.text != "Search a place to review..." {
+            delegate?.goNextCell(index: index)
+        }
     }
     
     @objc fileprivate func clickSearch() {
+        searchTextField.becomeFirstResponder()
         backWhiteView.alpha = 1
         searchView2.alpha = 1
         backImageView.alpha = 1
-        searchLabel2.alpha = 1
+        searchTextField.alpha = 1
         innerWriteCollectionview.alpha = 1
+    }
+    
+    @objc fileprivate func backClicked() {
+        backWhiteView.alpha = 0
+        searchView2.alpha = 0
+        backImageView.alpha = 0
+        searchTextField.alpha = 0
+        innerWriteCollectionview.alpha = 0
+        
+        closeText()
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
@@ -522,12 +697,10 @@ class firstWriteReviewCell: UICollectionViewCell, UICollectionViewDelegateFlowLa
         backWhiteView.alpha = 0
         searchView2.alpha = 0
         backImageView.alpha = 0
-        searchLabel2.alpha = 0
+        searchTextField.alpha = 0
         innerWriteCollectionview.alpha = 0
         
-        let attributedString = NSMutableAttributedString(string: "Cool Restaurant")
-        attributedString.addAttribute(NSAttributedString.Key.kern, value: CGFloat(-0.1), range: NSRange(location: 0, length: attributedString.length))
-        searchLabel.attributedText = attributedString
+        searchLabel.letterSpacing(text: "Cool Restaurant", spacing: -0.1)
         searchLabel.textColor = .black
         
         searchImageView.image = UIImage(named: "imsi_restaurant")
@@ -557,10 +730,7 @@ class innerFirstWriteCell: UICollectionViewCell {
     
     let restLabel: UILabel = {
         let lb = UILabel()
-        // letter spacing -0.1
-        let attributedString = NSMutableAttributedString(string: "Cool Restaurant")
-        attributedString.addAttribute(NSAttributedString.Key.kern, value: CGFloat(-0.1), range: NSRange(location: 0, length: attributedString.length))
-        lb.attributedText = attributedString
+        lb.letterSpacing(text: "Cool Restaurant", spacing: -0.1)
         lb.font = UIFont(name: "DMSans-Medium", size: 14)
         lb.textColor = .black
         lb.textAlignment = .left
@@ -577,10 +747,7 @@ class innerFirstWriteCell: UICollectionViewCell {
     
     let locationLabel: UILabel = {
         let lb = UILabel()
-        // letter spacing 0.0
-        let attributedString = NSMutableAttributedString(string: "100m")
-        attributedString.addAttribute(NSAttributedString.Key.kern, value: CGFloat(0.0), range: NSRange(location: 0, length: attributedString.length))
-        lb.attributedText = attributedString
+        lb.letterSpacing(text: "100m", spacing: 0.0)
         lb.font = UIFont(name: "DMSans-Regular", size: 12)
         lb.textColor = .gray
         lb.textAlignment = .left
@@ -621,6 +788,7 @@ class innerFirstWriteCell: UICollectionViewCell {
     }
     
     @objc fileprivate func restClicked() {
+        delegate?.closeText()
         delegate?.restClicked()
     }
     
@@ -724,7 +892,9 @@ class secondWriteReviewCell: UICollectionViewCell {
     }
     
     @objc fileprivate func goNextCell() {
-        delegate?.goNextCell(index: index)
+        if cosmosView.rating > 0 {
+            delegate?.goNextCell(index: index)
+        }
     }
 }
 
@@ -759,11 +929,13 @@ class thirdWriteReviewCell: UICollectionViewCell {
         return lb
     }()
     
-    let photoBackView: UIView = {
+    lazy var photoBackView: UIView = {
         let view = UIView()
         view.backgroundColor = UIColor.rgb(red: 232, green: 232, blue: 232)
         view.layer.cornerRadius = 10
         view.layer.masksToBounds = true
+        view.isUserInteractionEnabled = true
+        view.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(selectPhoto)))
         return view
     }()
     
@@ -840,13 +1012,18 @@ class thirdWriteReviewCell: UICollectionViewCell {
         nextLabelConstraint = nextLabel.anchor(photoBackView.bottomAnchor, left: self.leftAnchor, bottom: nil, right: self.rightAnchor, topConstant: 24, leftConstant: 24, bottomConstant: 0, rightConstant: 24, widthConstant: 0, heightConstant: 56).first
     }
     
+    @objc fileprivate func selectPhoto() {
+        print("photo selecting..")
+        delegate?.selectPhoto()
+    }
+    
     @objc fileprivate func goNextCell() {
         // 사진 선택했을때는 Skip을 Next로 바꿔주기.
         delegate?.goNextCell(index: index)
     }
 }
 
-class fourthWriteReviewCell: UICollectionViewCell {
+class fourthWriteReviewCell: UICollectionViewCell, UITextViewDelegate {
     
     var index: Int = 3
     weak var delegate: WriteReviewController?
@@ -887,26 +1064,59 @@ class fourthWriteReviewCell: UICollectionViewCell {
         return view
     }()
     
-    let postLabel: UILabel = {
-        let lb = UILabel()
-        // letter spacing -0.1
-        let attributedString = NSMutableAttributedString(string: "Tell us about the restaurant!\n\nReviews unrelated to the restaurant may be deleted without notice.")
-        attributedString.addAttribute(NSAttributedString.Key.kern, value: CGFloat(-0.1), range: NSRange(location: 0, length: attributedString.length))
-        lb.attributedText = attributedString
-        lb.font = UIFont(name: "DMSans-Regular", size: 14)
-        lb.textColor = .lightGray
-        lb.textAlignment = .left
-        lb.numberOfLines = 0
-        return lb
+    var dividerLineConstraint: NSLayoutConstraint?
+    var clearButtonConstraint: NSLayoutConstraint?
+    var closeButtonConstraint: NSLayoutConstraint?
+    
+    lazy var contatinerView: UIView = {
+        let containerview = UIView()
+        containerview.backgroundColor = .white
+        containerview.frame = CGRect(x: 0, y: 0, width: 100, height: 40)
+        
+        let dividerLine = UIView()
+        dividerLine.backgroundColor = UIColor(white: 0.4, alpha: 0.4)
+        containerview.addSubview(dividerLine)
+        dividerLineConstraint = dividerLine.anchor(containerview.topAnchor, left: containerview.leftAnchor, bottom: nil, right: containerview.rightAnchor, topConstant: 0, leftConstant: 0, bottomConstant: 0, rightConstant: 0, widthConstant: 0, heightConstant: 0.5).first
+        
+        let clearButton = UIButton(type: .system)
+        clearButton.setTitle("CLEAR", for: .normal)
+        clearButton.setTitleColor(.gray, for: .normal)
+        clearButton.titleLabel?.font = UIFont(name: "DMSans-Medium", size: 12)
+        clearButton.addTarget(self, action: #selector(clearText), for: .touchUpInside)
+        containerview.addSubview(clearButton)
+        clearButtonConstraint = clearButton.anchor(containerview.topAnchor, left: containerview.leftAnchor, bottom: containerview.bottomAnchor, right: nil, topConstant: 0, leftConstant: 12, bottomConstant: 0, rightConstant: 0, widthConstant: 50, heightConstant: 0).first
+        
+        let closeButton = UIButton(type: .system)
+        closeButton.setTitle("CLOSE", for: .normal)
+        closeButton.setTitleColor(.gray, for: .normal)
+        closeButton.titleLabel?.font = UIFont(name: "DMSans-Bold", size: 12)
+        closeButton.addTarget(self, action: #selector(closeText), for: .touchUpInside)
+        containerview.addSubview(closeButton)
+        closeButtonConstraint = closeButton.anchor(containerview.topAnchor, left: nil, bottom: containerview.bottomAnchor, right: containerview.rightAnchor, topConstant: 0, leftConstant: 0, bottomConstant: 0, rightConstant: 12, widthConstant: 50, heightConstant: 0).first
+        return containerview
     }()
+    
+    lazy var searchTextView: UITextView = {
+        let tv = UITextView()
+        tv.text = "Tell us about the restaurant!\n\nReviews unrelated to the restaurant may be deleted without notice."
+        tv.textColor = .lightGray
+        tv.font = UIFont(name: "DMSans-Regular", size: 14)
+        tv.returnKeyType = .default
+        tv.autocorrectionType = .no
+        tv.autocapitalizationType = .none
+        tv.delegate = self
+        return tv
+    }()
+    
+    override var inputAccessoryView: UIView? {
+        get {
+            return contatinerView
+        }
+    }
     
     let countLabel: UILabel = {
         let lb = UILabel()
-        // letter spacing 0.0
-        let attributedString = NSMutableAttributedString(string: "0/300")
-        // 추후에 글자크기에 맞춰서 background color 넓혀야함.
-        attributedString.addAttribute(NSAttributedString.Key.kern, value: CGFloat(0.0), range: NSRange(location: 0, length: attributedString.length))
-        lb.attributedText = attributedString
+        lb.text = "0/300"
         lb.font = UIFont(name: "DMSans-Regular", size: 12)
         lb.textColor = .darkGray
         lb.textAlignment = .center
@@ -947,7 +1157,7 @@ class fourthWriteReviewCell: UICollectionViewCell {
     var titleLabelConstraint: NSLayoutConstraint?
     var subtitleLabelConstraint: NSLayoutConstraint?
     var postBackViewConstraint: NSLayoutConstraint?
-    var postLabelConstraint: NSLayoutConstraint?
+    var searchTextViewConstraint: NSLayoutConstraint?
     var countLabelConstraint: NSLayoutConstraint?
     var nextLabelConstraint: NSLayoutConstraint?
     
@@ -957,22 +1167,54 @@ class fourthWriteReviewCell: UICollectionViewCell {
         addSubview(titleLabel)
         addSubview(subtitleLabel)
         addSubview(postBackView)
-        addSubview(postLabel)
+        addSubview(searchTextView)
         addSubview(countLabel)
         addSubview(nextLabel)
         
         titleLabelConstraint = titleLabel.anchor(self.topAnchor, left: self.leftAnchor, bottom: nil, right: self.rightAnchor, topConstant: 0, leftConstant: 0, bottomConstant: 0, rightConstant: 0, widthConstant: 0, heightConstant: 28).first
         subtitleLabelConstraint = subtitleLabel.anchor(titleLabel.bottomAnchor, left: self.leftAnchor, bottom: nil, right: self.rightAnchor, topConstant: 8, leftConstant: 48, bottomConstant: 0, rightConstant: 48, widthConstant: 0, heightConstant: 56).first
         postBackViewConstraint = postBackView.anchor(subtitleLabel.bottomAnchor, left: self.leftAnchor, bottom: nil, right: self.rightAnchor, topConstant: 12, leftConstant: 24, bottomConstant: 0, rightConstant: 24, widthConstant: 0, heightConstant: 166).first
-        postLabelConstraint = postLabel.anchor(postBackView.topAnchor, left: postBackView.leftAnchor, bottom: nil, right: postBackView.rightAnchor, topConstant: 16, leftConstant: 16, bottomConstant: 0, rightConstant: 16, widthConstant: 0, heightConstant: 88).first
+        searchTextViewConstraint = searchTextView.anchor(postBackView.topAnchor, left: postBackView.leftAnchor, bottom: nil, right: postBackView.rightAnchor, topConstant: 16, leftConstant: 16, bottomConstant: 0, rightConstant: 16, widthConstant: 0, heightConstant: 88).first
         countLabelConstraint = countLabel.anchor(nil, left: nil, bottom: postBackView.bottomAnchor, right: postBackView.rightAnchor, topConstant: 0, leftConstant: 0, bottomConstant: 12, rightConstant: 12, widthConstant: 46, heightConstant: 18).first
         nextLabelConstraint = nextLabel.anchor(postBackView.bottomAnchor, left: self.leftAnchor, bottom: nil, right: self.rightAnchor, topConstant: 24, leftConstant: 24, bottomConstant: 0, rightConstant: 24, widthConstant: 0, heightConstant: 56).first
+    }
+    
+    @objc func closeText() {
+        self.searchTextView.endEditing(true)
+    }
+    
+    @objc fileprivate func clearText() {
+        self.searchTextView.text = nil
     }
     
     @objc fileprivate func goNextCell() {
         delegate?.goNextCell(index: index)
         delegate?.goFinish()
     }
+    
+    // TextView Place Holder
+    func textViewDidBeginEditing(_ textView: UITextView) {
+        if textView.textColor == UIColor.lightGray {
+            textView.text = nil
+            textView.textColor = UIColor.black
+            delegate?.keyboardViewUp()
+        }
+    }
+    
+    func textViewDidChange(_ textView: UITextView) {
+        let count = textView.text.count
+        countLabel.text = "\(count)/300"
+    }
+    
+    // TextView Place Holder
+    func textViewDidEndEditing(_ textView: UITextView) {
+        if textView.text.isEmpty {
+            textView.text = "Tell us about the restaurant!\n\nReviews unrelated to the restaurant may be deleted without notice."
+            textView.textColor = UIColor.lightGray
+            delegate?.keyboardViewDown()
+        }
+    }
+
     
 }
 

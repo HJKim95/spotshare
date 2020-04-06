@@ -85,10 +85,6 @@ class ReviewController: UIViewController, UICollectionViewDelegateFlowLayout, UI
         return cv
     }()
     
-//    var reviews = [Review]()
-//    var reviews2 = [Review2]()
-    
-    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -97,16 +93,6 @@ class ReviewController: UIViewController, UICollectionViewDelegateFlowLayout, UI
         self.navigationController?.interactivePopGestureRecognizer?.isEnabled = true
         self.navigationController?.interactivePopGestureRecognizer?.delegate = nil
         self.navigationController?.delegate = self
-        
-        
-//        for text in texts {
-//            let review = Review(text: text)
-//            self.reviews.append(review)
-//        }
-//        for image in images2 {
-//            let image = Review2(image: image)
-//            self.reviews2.append(image)
-//        }
 
         setupLayouts()
         getReview_firebase()
@@ -297,7 +283,7 @@ class ReviewController: UIViewController, UICollectionViewDelegateFlowLayout, UI
     // https://github.com/ergunemr/BottomPopup
     @objc fileprivate func writeReview() {
         let vc = WriteReviewController()
-        vc.height = view.frame.height - 100
+        vc.height = view.frame.height - 70
         vc.topCornerRadius = 35
         vc.presentDuration = 0.5
         vc.dismissDuration = 0.5

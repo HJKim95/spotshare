@@ -111,11 +111,16 @@ PODS:
   - nanopb/decode (0.3.9011)
   - nanopb/encode (0.3.9011)
   - PromisesObjC (1.2.8)
+  - PryntTrimmerView (4.0.0)
   - SDWebImage (5.5.1):
     - SDWebImage/Core (= 5.5.1)
   - SDWebImage/Core (5.5.1)
+  - SteviaLayout (4.7.3)
   - SweeterSwift (1.0.5)
   - SwiftyJSON (5.0.0)
+  - YPImagePicker (4.2.0):
+    - PryntTrimmerView (~> 4.0.0)
+    - SteviaLayout (~> 4.7.3)
 
 DEPENDENCIES:
   - Alamofire (~> 5.0)
@@ -130,6 +135,7 @@ DEPENDENCIES:
   - MultiSlider
   - SDWebImage
   - SwiftyJSON
+  - YPImagePicker
 
 SPEC REPOS:
   trunk:
@@ -159,9 +165,12 @@ SPEC REPOS:
     - MultiSlider
     - nanopb
     - PromisesObjC
+    - PryntTrimmerView
     - SDWebImage
+    - SteviaLayout
     - SweeterSwift
     - SwiftyJSON
+    - YPImagePicker
 
 SPEC CHECKSUMS:
   Alamofire: 3ba7a4db18b4f62c4a1c0e1cb39d7f3d52e10ada
@@ -190,10 +199,13 @@ SPEC CHECKSUMS:
   MultiSlider: 70bae4e86fa503bbd5e80face4b6e334f64c92f9
   nanopb: 18003b5e52dab79db540fe93fe9579f399bd1ccd
   PromisesObjC: c119f3cd559f50b7ae681fa59dc1acd19173b7e6
+  PryntTrimmerView: 67e67573ffd4c073f1308effa66aefd0cfa667a0
   SDWebImage: 1245d058b7b8f59adef7a6da6bbafd4f1ab67041
+  SteviaLayout: c2ecdcff57d44e38fd2f65e54ad52aeae28ca0c4
   SweeterSwift: 2708d1eea926546f8f6e8fea38ac8f5598ff00c7
   SwiftyJSON: 36413e04c44ee145039d332b4f4e2d3e8d6c4db7
+  YPImagePicker: accf310f9526641a84372c0ecf943547d9b1e52c
 
-PODFILE CHECKSUM: 358c84ff0b659d09d4aee37172b34ec3804694fc
+PODFILE CHECKSUM: 9c5a0a9970189769361c4b05e9b9656a65a572f4
 
 COCOAPODS: 1.9.1

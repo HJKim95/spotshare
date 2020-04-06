@@ -245,12 +245,12 @@ class ProfileScrollCell: UICollectionViewCell, UICollectionViewDelegate, UIColle
     let MyReviewid = "reviewid"
     let MyViewid = "viewid"
     
-    lazy var myPageBar: MyPageBar = {
-        let pb = MyPageBar()
-        pb.users = self
-        pb.translatesAutoresizingMaskIntoConstraints = false
-        return pb
-    }()
+//    lazy var myPageBar: MyPageBar = {
+//        let pb = MyPageBar()
+//        pb.users = self
+//        pb.translatesAutoresizingMaskIntoConstraints = false
+//        return pb
+//    }()
     
     lazy var ScrollcollectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
@@ -287,11 +287,11 @@ class ProfileScrollCell: UICollectionViewCell, UICollectionViewDelegate, UIColle
         ScrollcollectionView.register(MyReviewCell.self, forCellWithReuseIdentifier: MyReviewid)
         ScrollcollectionView.register(MyLastViewCell.self, forCellWithReuseIdentifier: MyViewid)
         
-        addSubview(myPageBar)
+//        addSubview(myPageBar)
         addSubview(ScrollcollectionView)
         
-        myPageBarConstraint = myPageBar.anchor(self.topAnchor, left: self.leftAnchor, bottom: nil, right: self.rightAnchor, topConstant: 0, leftConstant: 0, bottomConstant: 0, rightConstant: 0, widthConstant: 0, heightConstant: 61).first
-        ScrollCollectionViewConstraint = ScrollcollectionView.anchor(myPageBar.bottomAnchor, left: self.leftAnchor, bottom: self.bottomAnchor, right: self.rightAnchor, topConstant: 0, leftConstant: 0, bottomConstant: 0, rightConstant: 0, widthConstant: 0, heightConstant: 0).first
+//        myPageBarConstraint = myPageBar.anchor(self.topAnchor, left: self.leftAnchor, bottom: nil, right: self.rightAnchor, topConstant: 0, leftConstant: 0, bottomConstant: 0, rightConstant: 0, widthConstant: 0, heightConstant: 61).first
+        ScrollCollectionViewConstraint = ScrollcollectionView.anchor(self.topAnchor, left: self.leftAnchor, bottom: self.bottomAnchor, right: self.rightAnchor, topConstant: 0, leftConstant: 0, bottomConstant: 0, rightConstant: 0, widthConstant: 0, heightConstant: 0).first
         
     }
     
