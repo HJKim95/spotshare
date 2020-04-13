@@ -64,10 +64,11 @@ class HotSpotCell: UICollectionViewCell, UICollectionViewDelegateFlowLayout, UIC
 
         innerSpotCollectionview.register(innerSpotCell.self, forCellWithReuseIdentifier: cellid)
         
-        locationManager.delegate = self
-        locationManager.requestWhenInUseAuthorization()
-        locationManager.desiredAccuracy = kCLLocationAccuracyBest
-        locationManager.startUpdatingLocation()
+//        locationManager.delegate = self
+//        locationManager.requestWhenInUseAuthorization()
+//        locationManager.desiredAccuracy = kCLLocationAccuracyBest
+//        locationManager.startUpdatingLocation()
+        getHotSpot_firebase(location: myLocation)
     }
     
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
@@ -77,14 +78,14 @@ class HotSpotCell: UICollectionViewCell, UICollectionViewDelegateFlowLayout, UIC
     var myLocation: CLLocationCoordinate2D = CLLocationCoordinate2D(latitude: 37.537774, longitude: 127.072661)
     
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        
+        print("위치 받아오는중... Hot Spot Cell")
         let location = locations.last
         
         guard let lat = location?.coordinate.latitude else {return}
         guard let long = location?.coordinate.longitude else {return}
         let convertLocation = CLLocationCoordinate2D(latitude: lat, longitude: long)
-        self.myLocation = convertLocation
-        getHotSpot_firebase(location: convertLocation)
+//        self.myLocation = convertLocation
+        getHotSpot_firebase(location: myLocation)
         self.locationManager.stopUpdatingLocation()
     }
     
@@ -92,6 +93,7 @@ class HotSpotCell: UICollectionViewCell, UICollectionViewDelegateFlowLayout, UIC
     var resInfos = [ResInfoModel]()
     
     fileprivate func getHotSpot_firebase(location: CLLocationCoordinate2D) {
+        print("Hot Spot firebase...")
         let ref = Database.database().reference().child("추천")
         ref.observe(.childAdded, with: { [weak self] (snapshot) in
             let snapid = snapshot.key

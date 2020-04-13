@@ -390,27 +390,35 @@ class WriteReviewController: BottomPopupViewController, UICollectionViewDelegate
         config.library.spacingBetweenItems = 1.0
         config.library.skipSelectionsGallery = false
         config.library.preselectedItems = nil
-        let picker = YPImagePicker(configuration: config)
-        present(picker, animated: true)
-        // photo selecting finished
+        YPImagePickerConfiguration.shared = config
+        let picker = YPImagePicker()
+        let indexPath = IndexPath(item: 2, section: 0)
+        let cell = reviewCollectionview.cellForItem(at: indexPath) as! thirdWriteReviewCell
         picker.didFinishPicking { [unowned picker] items, cancelled in
+            cell.photoImageView.alpha = 0
+            cell.photoLabel.alpha = 0
+            if cell.imageArray.count > 0 {
+                cell.imageArray.removeAll()
+            }
             for item in items {
                 switch item {
                 case .photo(let photo):
-                    print(photo, "111222333")
+                    cell.imageArray.append(photo.image)
+                    DispatchQueue.main.async {
+                        cell.imageCollectionview.reloadData()
+                    }
                 case .video(let video):
                     print(video)
                 }
             }
-            picker.dismiss(animated: true, completion: nil)
-        }
-        // photo selecting canceled
-        picker.didFinishPicking { [unowned picker] items, cancelled in
-            if cancelled {
-                print("Picker was canceled")
+            picker.dismiss(animated: true) {
+                if cell.imageArray.count > 0 {
+                    cell.nextLabel.letterSpacing(text: "NEXT", spacing: 1.0)
+                }
             }
-            picker.dismiss(animated: true, completion: nil)
         }
+        // 꼭! didFinishPicking 다음에 present 해야함!!
+        present(picker, animated: true, completion: nil)
     }
     
 }
@@ -898,7 +906,9 @@ class secondWriteReviewCell: UICollectionViewCell {
     }
 }
 
-class thirdWriteReviewCell: UICollectionViewCell {
+class thirdWriteReviewCell: UICollectionViewCell, UICollectionViewDelegateFlowLayout, UICollectionViewDelegate, UICollectionViewDataSource  {
+    
+    fileprivate let cellid = "cellid"
     
     var index: Int = 2
     weak var delegate: WriteReviewController?
@@ -929,15 +939,24 @@ class thirdWriteReviewCell: UICollectionViewCell {
         return lb
     }()
     
-    lazy var photoBackView: UIView = {
-        let view = UIView()
-        view.backgroundColor = UIColor.rgb(red: 232, green: 232, blue: 232)
-        view.layer.cornerRadius = 10
-        view.layer.masksToBounds = true
-        view.isUserInteractionEnabled = true
-        view.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(selectPhoto)))
-        return view
+    lazy var imageCollectionview: UICollectionView = {
+        let layout = UICollectionViewFlowLayout()
+        layout.scrollDirection = .horizontal
+        layout.minimumLineSpacing = 0
+        let collectionview = UICollectionView(frame: .zero, collectionViewLayout: layout)
+        collectionview.delegate = self
+        collectionview.dataSource = self
+        collectionview.alwaysBounceHorizontal = true
+        collectionview.showsHorizontalScrollIndicator = false
+        collectionview.backgroundColor = UIColor.rgb(red: 232, green: 232, blue: 232)
+        collectionview.isPagingEnabled = true
+        collectionview.layer.cornerRadius = 10
+        collectionview.layer.masksToBounds = true
+        collectionview.isUserInteractionEnabled = true
+        collectionview.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(selectPhoto)))
+        return collectionview
     }()
+    
     
     let photoImageView: UIImageView = {
         let iv = UIImageView()
@@ -962,10 +981,7 @@ class thirdWriteReviewCell: UICollectionViewCell {
     
     lazy var nextLabel: UILabel = {
         let lb = UILabel()
-        // letter spacing 1.0
-        let attributedString = NSMutableAttributedString(string: "SKIP")
-        attributedString.addAttribute(NSAttributedString.Key.kern, value: CGFloat(1.0), range: NSRange(location: 0, length: attributedString.length))
-        lb.attributedText = attributedString
+        lb.letterSpacing(text: "SKIP", spacing: 1.0)
         lb.font = UIFont(name: "DMSans-Bold", size: 14)
         lb.textColor = .white
         lb.backgroundColor = .mainColor
@@ -989,27 +1005,45 @@ class thirdWriteReviewCell: UICollectionViewCell {
     
     var titleLabelConstraint: NSLayoutConstraint?
     var subtitleLabelConstraint: NSLayoutConstraint?
-    var photoBackViewConstraint: NSLayoutConstraint?
+    var imageCollectionviewConstraint: NSLayoutConstraint?
     var photoImageViewConstraint: NSLayoutConstraint?
     var photoLabelConstraint: NSLayoutConstraint?
     var nextLabelConstraint: NSLayoutConstraint?
     
+    var imageArray = [UIImage]()
+    
     fileprivate func setupLayouts() {
         backgroundColor = .white
         
+        imageCollectionview.register(innerImageCell.self, forCellWithReuseIdentifier: cellid)
+        
         addSubview(titleLabel)
         addSubview(subtitleLabel)
-        addSubview(photoBackView)
+        addSubview(imageCollectionview)
         addSubview(photoImageView)
         addSubview(photoLabel)
         addSubview(nextLabel)
         
         titleLabelConstraint = titleLabel.anchor(self.topAnchor, left: self.leftAnchor, bottom: nil, right: self.rightAnchor, topConstant: 0, leftConstant: 0, bottomConstant: 0, rightConstant: 0, widthConstant: 0, heightConstant: 28).first
         subtitleLabelConstraint = subtitleLabel.anchor(titleLabel.bottomAnchor, left: self.leftAnchor, bottom: nil, right: self.rightAnchor, topConstant: 8, leftConstant: 48, bottomConstant: 0, rightConstant: 48, widthConstant: 0, heightConstant: 56).first
-        photoBackViewConstraint = photoBackView.anchor(subtitleLabel.bottomAnchor, left: self.leftAnchor, bottom: nil, right: self.rightAnchor, topConstant: 16, leftConstant: 24, bottomConstant: 0, rightConstant: 24, widthConstant: 0, heightConstant: 150).first
-        photoImageViewConstraint = photoImageView.anchor(photoBackView.topAnchor, left: self.leftAnchor, bottom: nil, right: nil, topConstant: 42, leftConstant: (self.frame.width / 2) - 16, bottomConstant: 0, rightConstant: 0, widthConstant: 32, heightConstant: 32).first
-        photoLabelConstraint = photoLabel.anchor(photoImageView.bottomAnchor, left: photoBackView.leftAnchor, bottom: nil, right: photoBackView.rightAnchor, topConstant: 8, leftConstant: 0, bottomConstant: 0, rightConstant: 0, widthConstant: 0, heightConstant: 26).first
-        nextLabelConstraint = nextLabel.anchor(photoBackView.bottomAnchor, left: self.leftAnchor, bottom: nil, right: self.rightAnchor, topConstant: 24, leftConstant: 24, bottomConstant: 0, rightConstant: 24, widthConstant: 0, heightConstant: 56).first
+        imageCollectionviewConstraint = imageCollectionview.anchor(subtitleLabel.bottomAnchor, left: self.leftAnchor, bottom: nil, right: self.rightAnchor, topConstant: 16, leftConstant: 24, bottomConstant: 0, rightConstant: 24, widthConstant: 0, heightConstant: 150).first
+        photoImageViewConstraint = photoImageView.anchor(imageCollectionview.topAnchor, left: self.leftAnchor, bottom: nil, right: nil, topConstant: 42, leftConstant: (self.frame.width / 2) - 16, bottomConstant: 0, rightConstant: 0, widthConstant: 32, heightConstant: 32).first
+        photoLabelConstraint = photoLabel.anchor(photoImageView.bottomAnchor, left: imageCollectionview.leftAnchor, bottom: nil, right: imageCollectionview.rightAnchor, topConstant: 8, leftConstant: 0, bottomConstant: 0, rightConstant: 0, widthConstant: 0, heightConstant: 26).first
+        nextLabelConstraint = nextLabel.anchor(imageCollectionview.bottomAnchor, left: self.leftAnchor, bottom: nil, right: self.rightAnchor, topConstant: 24, leftConstant: 24, bottomConstant: 0, rightConstant: 24, widthConstant: 0, heightConstant: 56).first
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: cellid, for: indexPath) as! innerImageCell
+        cell.photoImageView.image = imageArray[indexPath.item]
+        return cell
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        return imageArray.count
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+        return CGSize(width: collectionView.frame.width, height: collectionView.frame.height)
     }
     
     @objc fileprivate func selectPhoto() {
@@ -1020,6 +1054,34 @@ class thirdWriteReviewCell: UICollectionViewCell {
     @objc fileprivate func goNextCell() {
         // 사진 선택했을때는 Skip을 Next로 바꿔주기.
         delegate?.goNextCell(index: index)
+    }
+}
+
+class innerImageCell: UICollectionViewCell {
+    
+    let photoImageView: UIImageView = {
+        let iv = UIImageView()
+        iv.contentMode = .scaleAspectFill
+        iv.layer.cornerRadius = 12
+        iv.layer.masksToBounds = true
+        return iv
+    }()
+    
+    
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        setupLayouts()
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    var photoImageViewConstraint: NSLayoutConstraint?
+    
+    fileprivate func setupLayouts() {
+        addSubview(photoImageView)
+        photoImageViewConstraint = photoImageView.anchor(self.topAnchor, left: self.leftAnchor, bottom: self.bottomAnchor, right: self.rightAnchor, topConstant: 0, leftConstant: 0, bottomConstant: 0, rightConstant: 0, widthConstant: 0, heightConstant: 0).first
     }
 }
 
@@ -1185,6 +1247,7 @@ class fourthWriteReviewCell: UICollectionViewCell, UITextViewDelegate {
     
     @objc fileprivate func clearText() {
         self.searchTextView.text = nil
+        countLabel.text = "0/300"
     }
     
     @objc fileprivate func goNextCell() {
