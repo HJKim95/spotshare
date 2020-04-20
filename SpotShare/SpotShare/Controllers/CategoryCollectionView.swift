@@ -338,6 +338,7 @@ class CategoryCollectionView: UIViewController, UICollectionViewDelegateFlowLayo
         if collectionView == innerCategoryFilterview {
             return filterNames.count
         }
+            
         else if collectionView == dropDownCollectionview {
             if category == "한식" {
                 return resCategories.count
@@ -438,14 +439,15 @@ class CategoryCollectionView: UIViewController, UICollectionViewDelegateFlowLayo
         let location = CLLocationCoordinate2D(latitude: 37.551597, longitude: 126.924976)
         if collectionView == innerCategoryFilterview {
             let filterName = filterNames[indexPath.item]
+            // DB 완성되면 추후 해놓기.
             if filterName == "Top rating" {
-                categoryCell.getCategory_firebase(category: category ?? "Test", location: location, orderChild: "points", reverse: true)
+//                categoryCell.getCategory_firebase(category: category ?? "Test", location: location, orderChild: "points", reverse: true)
             }
             else if filterName == "A to Z" {
-                categoryCell.getCategory_firebase(category: category ?? "Test", location: location, orderChild: "resName", reverse: false)
+//                categoryCell.getCategory_firebase(category: category ?? "Test", location: location, orderChild: "resName", reverse: false)
             }
             else if filterName == "Seperate Toilet" {
-                categoryCell.getCategory_firebase(category: category ?? "Test", location: location, orderChild: "toilet", reverse: true)
+//                categoryCell.getCategory_firebase(category: category ?? "Test", location: location, orderChild: "toilet", reverse: true)
             }
         }
     }
@@ -575,9 +577,10 @@ class CategoryListCell: UICollectionViewCell, UICollectionViewDelegateFlowLayout
     weak var categoryDelegate: CategoryCollectionView?
     var category: String? {
         didSet {
+            
             // 임시방편
             let location = CLLocationCoordinate2D(latitude: 37.551597, longitude: 126.924976)
-            getCategory_firebase(category: category ?? "Test", location: location, orderChild: "resName", reverse: false)
+            getCategory_firebase(category: category ?? "한식", location: location, orderChild: "", reverse: false)
             locationManager.delegate = self
             locationManager.requestWhenInUseAuthorization()
             locationManager.desiredAccuracy = kCLLocationAccuracyBest
@@ -630,9 +633,9 @@ class CategoryListCell: UICollectionViewCell, UICollectionViewDelegateFlowLayout
             // 임시 location
             let location = CLLocationCoordinate2D(latitude: 37.551597, longitude: 126.924976)
             pagingStart = 0
-            getCategory_firebase(category: category ?? "Test", location: location, orderChild: saveChild, reverse: false)
+            getCategory_firebase(category: category ?? "한식", location: location, orderChild: saveChild, reverse: false)
         }
-        if let resinfo = categoryResInfos[category ?? "Test"]?[indexPath.item] {
+        if let resinfo = categoryResInfos[category ?? "한식"]?[indexPath.item] {
 
             cell.resLabel.letterSpacing(text: resinfo.resName ?? "", spacing: -0.1)
             let point = resinfo.starPoint ?? 3.5
@@ -680,12 +683,12 @@ class CategoryListCell: UICollectionViewCell, UICollectionViewDelegateFlowLayout
     }
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return categoryResInfos[category ?? "Test"]?.count ?? 0
+        return categoryResInfos[category ?? "한식"]?.count ?? 0
     }
     
     @objc fileprivate func goRestaurant(sender: UITapGestureRecognizer) {
         let indexPath = IndexPath(item: sender.view?.tag ?? 0, section: 0)
-        if let resinfo = categoryResInfos[category ?? "Test"]?[indexPath.item] {
+        if let resinfo = categoryResInfos[category ?? "한식"]?[indexPath.item] {
             categoryDelegate?.goRestaurant(resInfo: resinfo)
         }
     }
@@ -710,15 +713,13 @@ class CategoryListCell: UICollectionViewCell, UICollectionViewDelegateFlowLayout
     
     var category_name: String?
     
-    var resInfos = [ResInfoModel]()
+    
     let fetchCount = 13
-
+    
+    
+    var resInfos = [ResInfoModel]()
     var categoryResInfos = [String:[ResInfoModel]]()
     var checkCategory: String?
-    
-    
-    
-    
  
     var AllObject = [String]()
     // pagingCount ==> paging 주요 변수
@@ -726,25 +727,42 @@ class CategoryListCell: UICollectionViewCell, UICollectionViewDelegateFlowLayout
     // fixedCount ==> 고정 paging 수(얼마씩 paging 할것인가?)
     let fixedCount = 3
     var finishedPaging = false
-    // saveChild ==> category 저장용. (위에 filter 눌렀을때 바뀌는거 check 용)
-    var saveChild: String = "resName"
+    // saveChild ==> category 저장용. (위에 filter 눌렀을때 바뀌는거 check 용) (추후 DB 완성되면 바꿔주기)
+    var saveChild: String = ""
     // pagingStart ==> 같은 category에서 paging할때 오류 제거용
     var pagingStart = 0
     var checkPagingCount = 1
     
     fileprivate func getCategory_firebase(category: String, location: CLLocationCoordinate2D, orderChild: String, reverse: Bool) {
         // function 몇번 했는지 확인.
-        print("Paging operating..", checkPagingCount, "번")
+        print("Paging operating..", checkPagingCount, "번  (단순 function 횟수 세기)")
         checkPagingCount += 1
         let ref = Database.database().reference().child(category)
-        let query = ref.queryOrdered(byChild: orderChild)
+        var query = ref
+        if orderChild != "" {
+            query = ref.queryOrdered(byChild: orderChild) as! DatabaseReference
+        }
+        
+        // category filtering 했을때.
+        if self.checkCategory != category {
+            self.AllObject.removeAll()
+            self.resInfos.removeAll()
+            self.pagingCount = fixedCount
+            self.categoryResInfos.removeAll()
+            self.pagingStart = 0
+            DispatchQueue.main.async {
+                self.innerCategoryCollectionview.reloadData()
+            }
+        }
         
         var snapshotCount = 0
+        // filter 적용할때. (추후 DB완성되면 제대로 적용하는걸로)
         if self.saveChild != orderChild {
             self.AllObject.removeAll()
             self.resInfos.removeAll()
             self.pagingCount = fixedCount
         }
+        
         // value로 해야 first children의 count 총합을 구할수있다.
         query.observeSingleEvent(of: .value) { (snapshot) in
             snapshotCount = snapshot.children.allObjects.count
@@ -765,7 +783,7 @@ class CategoryListCell: UICollectionViewCell, UICollectionViewDelegateFlowLayout
                     if snapshotCount - (self!.pagingCount - self!.fixedCount) < self!.fixedCount { return }
                     for i in (self!.pagingCount - self!.fixedCount)..<self!.pagingCount {
                         guard let object = self?.AllObject[i] else {return}
-//                        print(object)
+                        
                         self?.getResData_firebase(resName: object, category: category, location: location)
                     }
                 }
@@ -791,7 +809,12 @@ class CategoryListCell: UICollectionViewCell, UICollectionViewDelegateFlowLayout
                 resmodel.toilet = dictionary["toilet"] as? String
                 // 추후에 resImage 항목 새로 음식 사진으로 넣어서 받자.
                 // FirstResImage로 받기에는 오류가 걸린다!
-                resmodel.resImageUrl = dictionary["resBackImage"] as? String
+                if dictionary["resBackImage"] as? String == nil {
+                    resmodel.resImageUrl = "https://firebasestorage.googleapis.com/v0/b/flog-3b09d.appspot.com/o/comingsoon2.png?alt=media&token=97386268-158e-47c7-9d4d-8c7ad70f6b99"
+                }
+                else {
+                    resmodel.resImageUrl = dictionary["resBackImage"] as? String
+                }
                 
                 // 해당 요일에 오픈 시간들 받아오기
                 let openReference = Database.database().reference().child("맛집").child(resName).child("open").child(self?.getWeekDate() ?? "")
@@ -855,9 +878,10 @@ class CategoryMapCell: UICollectionViewCell, GMSMapViewDelegate {
     
     var category: String? {
         didSet {
+            
             // 임시방편
             let location = CLLocationCoordinate2D(latitude: 37.551597, longitude: 126.924976)
-            testCategory_firebase(category: category ?? "Test", location: location, orderChild: "resName", reverse: false)
+            testCategory_firebase(category: category ?? "Test", location: location, orderChild: "", reverse: false)
 //            locationManager.delegate = self
 //            locationManager.requestWhenInUseAuthorization()
 //            locationManager.desiredAccuracy = kCLLocationAccuracyBest
@@ -975,6 +999,13 @@ class CategoryMapCell: UICollectionViewCell, GMSMapViewDelegate {
         marker.map = mapview
         marker.icon = UIImage(named: "marker_pin")
         marker.userData = markerData
+        print(finishedPaging)
+        if finishedPaging {
+            self.finishedPaging = false
+            self.pagingCount += self.fixedCount
+            let location = CLLocationCoordinate2D(latitude: 37.551597, longitude: 126.924976)
+            testCategory_firebase(category: category ?? "Test", location: location, orderChild: "", reverse: false)
+        }
     }
 
     var resInfos = [ResInfoModel]()
@@ -982,28 +1013,46 @@ class CategoryMapCell: UICollectionViewCell, GMSMapViewDelegate {
     // test
     var testAllObject = [String]()
     var testCount = 6
-    var saveChild: String = "resName"
+    var saveChild: String = ""
+    
+    // pagingCount ==> paging 주요 변수
+    var pagingCount = 5
+    // fixedCount ==> 고정 paging 수(얼마씩 paging 할것인가?)
+    let fixedCount = 5
+    var finishedPaging = false
+    var count = 0
+    
     
     fileprivate func testCategory_firebase(category: String, location: CLLocationCoordinate2D, orderChild: String, reverse: Bool) {
         let ref = Database.database().reference().child(category)
-        let query = ref.queryOrdered(byChild: orderChild)
-        
-        var snapshotCount = 0
-        if self.saveChild != orderChild {
-            self.testAllObject.removeAll()
-            self.resInfos.removeAll()
+        var query = ref
+        if orderChild != "" {
+            query = ref.queryOrdered(byChild: orderChild) as! DatabaseReference
         }
+//        print("functioning", pagingCount, "pagingCOunt")
+        var snapshotCount = 0
+//        if self.saveChild != orderChild {
+//            self.testAllObject.removeAll()
+//            self.resInfos.removeAll()
+//        }
         // value로 해야 first children의 count 총합을 구할수있다.
         query.observeSingleEvent(of: .value) { (snapshot) in
             snapshotCount = snapshot.children.allObjects.count
             query.observe(.childAdded, with: { [weak self] (snapshot) in
-                self?.saveChild = orderChild
-                self?.testAllObject.append(snapshot.key)
+//                self?.saveChild = orderChild
+                if self?.pagingCount == self?.fixedCount {
+                    self?.testAllObject.append(snapshot.key)
+                }
                 if snapshotCount == self?.testAllObject.count {
+                    
                     if reverse { self?.testAllObject.reverse() }
                     // 여기서 pagination을 추후 적용하면 된다.
-                    for i in self?.testAllObject ?? [""] {
-                        let resReference = Database.database().reference().child("맛집").child(i)
+                    if snapshotCount - (self!.pagingCount - self!.fixedCount) < self!.fixedCount { return }
+                    for i in (self!.pagingCount - self!.fixedCount)..<self!.pagingCount {
+                        print(self!.pagingCount, "pagingCount", self!.fixedCount, "fixedCount")
+                        guard let object = self?.testAllObject[i] else {return}
+//                        print(object)
+                        let resReference = Database.database().reference().child("맛집").child(object)
                         resReference.observeSingleEvent(of: .value, with: { [weak self] (snapshot) in
                             if let dictionary = snapshot.value as? [String:Any] {
                                 let resmodel = ResInfoModel()
@@ -1014,29 +1063,43 @@ class CategoryMapCell: UICollectionViewCell, GMSMapViewDelegate {
                                 guard let long = (dictionary["long"] as? CLLocationDegrees) else {return}
                                 resmodel.resLocation = CLLocationCoordinate2D(latitude: lat, longitude: long)
                                 resmodel.distance = location.distance(from: CLLocationCoordinate2D(latitude: lat, longitude: long))
-                                
+
                                 // 해당 요일에 오픈 시간들 받아오기
-                                let openReference = Database.database().reference().child("맛집").child(i).child("open").child(self?.getWeekDate() ?? "")
+                                let openReference = Database.database().reference().child("맛집").child(object).child("open").child(self?.getWeekDate() ?? "")
                                 openReference.observeSingleEvent(of: .value) { (snapshot) in
                                     if let value = snapshot.value {
                                         resmodel.open = value as? String
                                     }
                                 }
-                                
-                                let closeReference = Database.database().reference().child("맛집").child(i).child("close").child(self?.getWeekDate() ?? "")
+
+                                let closeReference = Database.database().reference().child("맛집").child(object).child("close").child(self?.getWeekDate() ?? "")
                                 closeReference.observeSingleEvent(of: .value) { (snapshot) in
                                     if let value = snapshot.value {
                                         resmodel.close = value as? String
                                     }
                                 }
                                 
+                                
+                                self!.count += 1
+                                print(self!.count, self!.fixedCount)
+                                if self!.count % self!.fixedCount == 0 {
+                                    print(123123)
+                                    self?.finishedPaging = true
+                                }
+                                else {
+                                    print(444444)
+                                    self?.finishedPaging = false
+                                }
+                                
                                 guard let location = resmodel.resLocation else {return}
                                 self?.setupMarkers(location: location, markerData: resmodel)
+                                
                             }
-                            
+
                         }) { (err) in
                             print("Failed to fetch resData:", err)
                         }
+
                     }
                 }
                 }) { (err) in

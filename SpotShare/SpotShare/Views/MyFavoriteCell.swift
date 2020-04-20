@@ -62,6 +62,7 @@ class MyFavoriteCell: UICollectionViewCell, UICollectionViewDelegateFlowLayout, 
         let indexPath = IndexPath(item: 0, section: 0)
         self.FavoriteCollectionview.scrollToItem(at: indexPath, at: .bottom, animated: true)
     }
+
     
 //    func scrollViewDidScroll(_ scrollView: UIScrollView) {
 //        let size = scrollView.contentSize

@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import YPImagePicker
 
 class EditProfileController: UIViewController {
     
@@ -45,11 +46,13 @@ class EditProfileController: UIViewController {
         return iv
     }()
     
-    let profileImageFadeView: UIView = {
+    lazy var profileImageFadeView: UIView = {
         let view = UIView()
         view.backgroundColor = UIColor(white: 0, alpha: 0.3)
         view.layer.masksToBounds = true
         view.layer.cornerRadius = 10
+        view.isUserInteractionEnabled = true
+        view.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(editProfImage)))
         return view
     }()
     
@@ -95,7 +98,7 @@ class EditProfileController: UIViewController {
         return lb
     }()
     
-    let saveChangeLabel: UILabel = {
+    lazy var saveChangeLabel: UILabel = {
         let lb = UILabel()
         lb.font = UIFont(name: "DMSans-Bold", size: 14)
         // letter spacing 1.0
@@ -109,6 +112,8 @@ class EditProfileController: UIViewController {
         lb.alpha = 0.5
         lb.layer.cornerRadius = 12
         lb.layer.masksToBounds = true
+        lb.isUserInteractionEnabled = true
+        lb.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(saveChanges)))
         return lb
     }()
     
@@ -164,6 +169,55 @@ class EditProfileController: UIViewController {
             editNameLabelConstraint = editNameLabel.anchor(nil, left: editNameView.leftAnchor, bottom: editNameView.bottomAnchor, right: editNameView.rightAnchor, topConstant: 0, leftConstant: 12, bottomConstant: 8, rightConstant: 12, widthConstant: 0, heightConstant: 26).first
             saveChangeLabelConstraint = saveChangeLabel.anchor(editNameView.bottomAnchor, left: view.leftAnchor, bottom: nil, right: view.rightAnchor, topConstant: 24, leftConstant: 24, bottomConstant: 0, rightConstant: 24, widthConstant: 0, heightConstant: 56).first
         }
+    }
+    
+    @objc fileprivate func editProfImage() {
+        print(123123123)
+        var config = YPImagePickerConfiguration()
+        config.albumName = "DefaultYPImagePickerAlbumName"
+        config.startOnScreen = YPPickerScreen.photo
+        config.screens = [.library]
+        config.showsCrop = .none
+//        config.targetImageSize = YPImageSize.original
+        config.overlayView = UIView()
+        config.hidesStatusBar = true
+        config.hidesBottomBar = false
+        config.preferredStatusBarStyle = UIStatusBarStyle.default
+//        config.bottomMenuItemSelectedColour = UIColor(r: 38, g: 38, b: 38)
+//        config.bottomMenuItemUnSelectedColour = UIColor(r: 153, g: 153, b: 153)
+        config.library.options = nil
+        config.library.onlySquare = false
+        config.library.isSquareByDefault = true
+        config.library.minWidthForItem = nil
+        config.library.mediaType = YPlibraryMediaType.photo
+        config.library.defaultMultipleSelection = true
+        config.library.maxNumberOfItems = 1
+        config.library.minNumberOfItems = 1
+        config.library.numberOfItemsInRow = 4
+        config.library.spacingBetweenItems = 1.0
+        config.library.skipSelectionsGallery = false
+        config.library.preselectedItems = nil
+        YPImagePickerConfiguration.shared = config
+        let picker = YPImagePicker()
+        picker.didFinishPicking { [unowned picker] items, _ in
+            if let photo = items.singlePhoto {
+                self.profileImageView.image = photo.image
+                print(photo.image) // Final image selected by the user
+                print(photo.originalImage) // original image selected by the user, unfiltered
+                print(photo.modifiedImage) // Transformed image, can be nil
+                print(photo.exifMeta) // Print exif meta data of original image.
+                
+            }
+            picker.dismiss(animated: true) {
+                self.saveChangeLabel.alpha = 1
+            }
+        }
+        present(picker, animated: true, completion: nil)
+    }
+    
+    @objc fileprivate func saveChanges() {
+        // 우선 임시
+        self.navigationController?.popViewController(animated: true)
     }
     
     @objc fileprivate func goBack() {

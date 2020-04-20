@@ -30,8 +30,13 @@ class MyPageCell: UICollectionViewCell, UICollectionViewDelegate, UICollectionVi
         return collectionView
     }()
     
+    lazy var myPageBar: MyPageBar = {
+        let pb = MyPageBar()
+        pb.users = self
+        pb.translatesAutoresizingMaskIntoConstraints = false
+        return pb
+    }()
 
-    
     override init(frame: CGRect) {
         super.init(frame: frame)
         setupViews()
@@ -43,16 +48,21 @@ class MyPageCell: UICollectionViewCell, UICollectionViewDelegate, UICollectionVi
     }
     
     var ProfileBigcollectionViewConstraint: NSLayoutConstraint?
-    
+    var myPageBarConstraint: NSLayoutConstraint?
+    var ssConstraint: NSLayoutConstraint?
     fileprivate func setupViews() {
         self.backgroundColor = .white
         
         addSubview(ProfileBigcollectionView)
-        
+
         ProfileBigcollectionViewConstraint = ProfileBigcollectionView.anchor(self.topAnchor, left: self.leftAnchor, bottom: self.bottomAnchor, right: self.rightAnchor, topConstant: 0, leftConstant: 0, bottomConstant: 0, rightConstant: 0, widthConstant: 0, heightConstant: 0).first
-        
+
         ProfileBigcollectionView.register(ProfileHeaderCell.self, forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader, withReuseIdentifier: headerid)
         ProfileBigcollectionView.register(ProfileScrollCell.self, forCellWithReuseIdentifier: cellid)
+        
+        let pageBarWidth: CGFloat = 210
+        addSubview(myPageBar)
+        myPageBarConstraint = myPageBar.anchor(nil, left: self.leftAnchor, bottom: self.bottomAnchor, right: nil, topConstant: 0, leftConstant: (frame.width / 2) - (pageBarWidth / 2), bottomConstant: 20, rightConstant: 0, widthConstant: pageBarWidth, heightConstant: 36).first
         
     }
     
@@ -73,28 +83,17 @@ class MyPageCell: UICollectionViewCell, UICollectionViewDelegate, UICollectionVi
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, referenceSizeForHeaderInSection section: Int) -> CGSize {
-        return CGSize(width: collectionView.frame.width, height: 220)
+        return CGSize(width: collectionView.frame.width, height: 54)
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        return CGSize(width: collectionView.frame.width, height: collectionView.frame.height)
+        return CGSize(width: collectionView.frame.width, height: collectionView.frame.height - 90)
     }
     
-    
-    func clickReview() {
-        DispatchQueue.main.async {
-            UIView.animate(withDuration: 0.5, delay: 0, options: UIView.AnimationOptions.curveEaseOut, animations: {
-                self.ProfileBigcollectionView.contentOffset.y = CGFloat(220)
-            }, completion: nil)
-        }
-    }
-    
-    func clickElse() {
-        DispatchQueue.main.async {
-            UIView.animate(withDuration: 0.5, delay: 0, options: UIView.AnimationOptions.curveEaseOut, animations: {
-                self.ProfileBigcollectionView.contentOffset.y = CGFloat(0)
-            }, completion: nil)
-        }
+    func scrollToMenuIndex(menuIndex: Int) {
+        let indexPath = IndexPath(item: 0, section: 0)
+        let cell = ProfileBigcollectionView.cellForItem(at: indexPath) as! ProfileScrollCell
+        cell.scrollToMenuIndex(menuIndex: menuIndex)
     }
     
     
@@ -213,18 +212,18 @@ class ProfileHeaderCell: UICollectionViewCell {
         myView.addSubview(editButton)
         myView.addSubview(settingButton)
         myView.addSubview(nameLabel)
-        myView.addSubview(reviewLabel)
-        myView.addSubview(favoriteLabel)
-        myView.addSubview(userImageView)
+//        myView.addSubview(reviewLabel)
+//        myView.addSubview(favoriteLabel)
+//        myView.addSubview(userImageView)
         
         myViewConstraint = myView.anchor(self.topAnchor, left: self.leftAnchor, bottom: self.bottomAnchor, right: self.rightAnchor, topConstant: 0, leftConstant: 0, bottomConstant: 0, rightConstant: 0, widthConstant: 0, heightConstant: 0).first
         settingButtonConstraint = settingButton.anchor(myView.topAnchor, left: nil, bottom: nil, right: myView.rightAnchor, topConstant: 22, leftConstant: 0, bottomConstant: 0, rightConstant: 24, widthConstant: 24, heightConstant: 24).first
         editButtonConstraint = editButton.anchor(myView.topAnchor, left: nil, bottom: nil, right: settingButton.leftAnchor, topConstant: 16, leftConstant: 0, bottomConstant: 0, rightConstant: 26, widthConstant: 130, heightConstant: 36).first
-        userImageViewConstraint = userImageView.anchor(myView.topAnchor, left: nil, bottom: nil, right: myView.rightAnchor, topConstant: 76, leftConstant: 0, bottomConstant: 0, rightConstant: -10, widthConstant: 190, heightConstant: 120).first
-        nameLabelConstraint = nameLabel.anchor(myView.topAnchor, left: myView.leftAnchor, bottom: nil, right: userImageView.leftAnchor, topConstant: 90, leftConstant: 20, bottomConstant: 0, rightConstant: 0, widthConstant: 0, heightConstant: 38).first
-        reviewLabelConstraint = reviewLabel.anchor(nameLabel.bottomAnchor, left: myView.leftAnchor, bottom: nil, right: userImageView.leftAnchor, topConstant: 10, leftConstant: 20, bottomConstant: 0, rightConstant: 0, widthConstant: 0, heightConstant: 18).first
-        favoriteLabelConstraint = favoriteLabel.anchor(reviewLabel.bottomAnchor, left: myView.leftAnchor, bottom: nil, right: userImageView.leftAnchor, topConstant: 4, leftConstant: 20, bottomConstant: 0, rightConstant: 0, widthConstant: 0, heightConstant: 18).first
-        
+//        userImageViewConstraint = userImageView.anchor(myView.topAnchor, left: nil, bottom: nil, right: myView.rightAnchor, topConstant: 76, leftConstant: 0, bottomConstant: 0, rightConstant: -10, widthConstant: 190, heightConstant: 120).first
+        nameLabelConstraint = nameLabel.anchor(myView.topAnchor, left: myView.leftAnchor, bottom: nil, right: editButton.leftAnchor, topConstant: 16, leftConstant: 20, bottomConstant: 0, rightConstant: 0, widthConstant: 0, heightConstant: 38).first
+//        reviewLabelConstraint = reviewLabel.anchor(nameLabel.bottomAnchor, left: myView.leftAnchor, bottom: nil, right: userImageView.leftAnchor, topConstant: 10, leftConstant: 20, bottomConstant: 0, rightConstant: 0, widthConstant: 0, heightConstant: 18).first
+//        favoriteLabelConstraint = favoriteLabel.anchor(reviewLabel.bottomAnchor, left: myView.leftAnchor, bottom: nil, right: userImageView.leftAnchor, topConstant: 4, leftConstant: 20, bottomConstant: 0, rightConstant: 0, widthConstant: 0, heightConstant: 18).first
+//
     }
     
     
@@ -244,13 +243,7 @@ class ProfileScrollCell: UICollectionViewCell, UICollectionViewDelegate, UIColle
     let MyFavoriteid = "favoriteid"
     let MyReviewid = "reviewid"
     let MyViewid = "viewid"
-    
-//    lazy var myPageBar: MyPageBar = {
-//        let pb = MyPageBar()
-//        pb.users = self
-//        pb.translatesAutoresizingMaskIntoConstraints = false
-//        return pb
-//    }()
+
     
     lazy var ScrollcollectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
@@ -268,6 +261,8 @@ class ProfileScrollCell: UICollectionViewCell, UICollectionViewDelegate, UIColle
     }()
     
     
+    
+    
     override init(frame: CGRect) {
         super.init(frame: frame)
         setupLayouts()
@@ -278,6 +273,7 @@ class ProfileScrollCell: UICollectionViewCell, UICollectionViewDelegate, UIColle
     }
     
     var myPageBarConstraint: NSLayoutConstraint?
+    var viewwwwConstraint: NSLayoutConstraint?
     var ScrollCollectionViewConstraint: NSLayoutConstraint?
     
     fileprivate func setupLayouts() {
@@ -287,11 +283,10 @@ class ProfileScrollCell: UICollectionViewCell, UICollectionViewDelegate, UIColle
         ScrollcollectionView.register(MyReviewCell.self, forCellWithReuseIdentifier: MyReviewid)
         ScrollcollectionView.register(MyLastViewCell.self, forCellWithReuseIdentifier: MyViewid)
         
-//        addSubview(myPageBar)
-        addSubview(ScrollcollectionView)
         
-//        myPageBarConstraint = myPageBar.anchor(self.topAnchor, left: self.leftAnchor, bottom: nil, right: self.rightAnchor, topConstant: 0, leftConstant: 0, bottomConstant: 0, rightConstant: 0, widthConstant: 0, heightConstant: 61).first
+        addSubview(ScrollcollectionView)
         ScrollCollectionViewConstraint = ScrollcollectionView.anchor(self.topAnchor, left: self.leftAnchor, bottom: self.bottomAnchor, right: self.rightAnchor, topConstant: 0, leftConstant: 0, bottomConstant: 0, rightConstant: 0, widthConstant: 0, heightConstant: 0).first
+        
         
     }
     
@@ -322,29 +317,10 @@ class ProfileScrollCell: UICollectionViewCell, UICollectionViewDelegate, UIColle
         return 3
     }
     
-//    func scrollViewDidScroll(_ scrollView: UIScrollView) {
-//        myPageBar.horizontalBarViewleftAnchor?.constant = scrollView.contentOffset.x / 3
-//    }
-    
+
     func scrollToMenuIndex(menuIndex: Int) {
         let indexPath = NSIndexPath(item: menuIndex, section: 0)
         ScrollcollectionView.scrollToItem(at: indexPath as IndexPath, at: [], animated: false)
-        
-        if indexPath.item == 1 {
-            clickReview()
-        }
-        
-        else {
-            clickElse()
-        }
-        
     }
-    
-    func clickReview() {
-        delegate?.clickReview()
-    }
-    
-    func clickElse() {
-        delegate?.clickElse()
-    }
+
 }

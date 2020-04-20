@@ -97,7 +97,8 @@ class MainController: UIViewController, UICollectionViewDelegateFlowLayout, UICo
         impactFeedbackgenerator.prepare()
         
         setupCollectionview()
-        setupSearchBar()
+//        setupSearchBar()
+        // searchBar를 mainCollectionCell에 넣기!! 이렇게해야 myPage에서 밑에 클릭이 가능함..
         setupTabBar()
 
     }
@@ -160,11 +161,13 @@ class MainController: UIViewController, UICollectionViewDelegateFlowLayout, UICo
         if index == 0 {
             UIView.animate(withDuration: 1, delay: 0, options: .curveEaseInOut, animations: {
                 self.searchbar.transform = .identity
+                self.searchbar.alpha = 1
             }, completion: nil)
         }
         else {
             UIView.animate(withDuration: 1, delay: 0, options: .curveEaseInOut, animations: {
                 self.searchbar.transform = CGAffineTransform(translationX: 0, y: self.view.frame.height )
+                self.searchbar.alpha = 0
             }, completion: nil)
         }
     }
@@ -220,17 +223,13 @@ class MainController: UIViewController, UICollectionViewDelegateFlowLayout, UICo
     //ExploreCell 눌렀을때
     @objc func OpenCategoryCollectionView(category: String) {
         let cv = CategoryCollectionView()
-//        cv.category = category
-        // 테스트용
-        cv.category = "Test"
+        cv.category = category
+//        cv.category = "한식"
         self.navigationController?.pushViewController(cv, animated: true)
         
     }
     
     @objc func goRestaurant(resInfo: ResInfoModel) {
-        //present 띄운거에서 pushviewcontroller가 안되기 때문에 한것.
-        // 그치만 present 띄운거 뒤에서 push가 되기 때문에 추후 방법을 다시 고쳐봐야할듯. 2019-09-28
-        // 수첩 내용 확인하고 CategoryCollectionview도 수정해줄것. 그냥 처음부터 push로 하고 review 쓰는것만 present로 깔끔히 하자.
         let restaurant = RestaurantViewController()
         restaurant.resinfo = resInfo
         self.navigationController?.pushViewController(restaurant, animated: true)

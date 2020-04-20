@@ -9,12 +9,12 @@
 import UIKit
 
 class MyPageBar: UIView, UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout {
-    private let resID = "resID"
-    //*****이거 이름 통일해서 array 하나로 만들자!!!!******** --> 해결! 2019-09-28
-    let resGroups = ["Favorites", "My Reviews" , "Last Viewed"]
-//    let imageNames = ["favorites", "reviews" , "lastViewed"]
     
-    var users: ProfileScrollCell?
+    private let pageID = "resID"
+    
+    let resGroups = ["즐겨찾기", "내 리뷰" , "최근검색"]
+    
+    weak var users: MyPageCell?
     
     lazy var barCollectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
@@ -23,42 +23,52 @@ class MyPageBar: UIView, UICollectionViewDataSource, UICollectionViewDelegate, U
         cv.dataSource = self
         cv.delegate = self
         cv.translatesAutoresizingMaskIntoConstraints = false
+        cv.layer.cornerRadius = 18
+        cv.layer.masksToBounds = true
+        cv.backgroundColor = .darkGray
+        cv.alpha = 0.7
         return cv
     }()
     
+    let horizontalBackground = UIView()
+    
     var barCollectionviewConstraint: NSLayoutConstraint?
+    
+    let barWidth:  CGFloat = 210
     
     override init(frame: CGRect) {
         super.init(frame: frame)
         
         addSubview(barCollectionView)
         
-        barCollectionView.register(usersCell.self, forCellWithReuseIdentifier: resID)
+        barCollectionView.register(usersCell.self, forCellWithReuseIdentifier: pageID)
         barCollectionviewConstraint = barCollectionView.anchor(self.topAnchor, left: self.leftAnchor, bottom: self.bottomAnchor, right: self.rightAnchor, topConstant: 0, leftConstant: 0, bottomConstant: 0, rightConstant: 0, widthConstant: 0, heightConstant: 0).first
         
         let selectedIndexPath = NSIndexPath(item: 0, section: 0)
         barCollectionView.selectItem(at: selectedIndexPath as IndexPath, animated: false, scrollPosition: [])
         
-//        setupHorizontalBar()
+        setupHorizontalBackground()
     }
-    let horizontalBarView = UIView()
-    var horizontalBarViewleftAnchor: NSLayoutConstraint?
     
-    func setupHorizontalBar() {
+    func setupHorizontalBackground() {
         
-//        horizontalBarView.backgroundColor = UIColor(white: 0.95, alpha: 1)
-        horizontalBarView.backgroundColor = .mainColor
-        horizontalBarView.translatesAutoresizingMaskIntoConstraints = false
-        addSubview(horizontalBarView)
+        horizontalBackground.backgroundColor = .init(white: 1, alpha: 0.3)
+        horizontalBackground.layer.cornerRadius = 18
+        horizontalBackground.layer.masksToBounds = true
         
-        horizontalBarViewleftAnchor = horizontalBarView.leftAnchor.constraint(equalTo: self.leftAnchor)
-        horizontalBarViewleftAnchor?.isActive = true
-        horizontalBarView.bottomAnchor.constraint(equalTo: self.bottomAnchor).isActive = true
-        horizontalBarView.widthAnchor.constraint(equalTo: self.widthAnchor, multiplier: 1/3).isActive = true
-        horizontalBarView.heightAnchor.constraint(equalToConstant: 2).isActive = true
+        
+        insertSubview(horizontalBackground, at: 1)
+        horizontalBackground.frame = CGRect(x: 5, y: 0, width: (barWidth / 3) - 10, height: 36)
+        
     }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+    
+        
+        let x = CGFloat(indexPath.item) * frame.width / 3
+        UIView.animate(withDuration: 0.5, delay: 0, usingSpringWithDamping: 1, initialSpringVelocity: 1, options: .curveEaseOut, animations: {
+            self.horizontalBackground.frame = CGRect(x: x + 5, y: 0, width: (self.barWidth / 3) - 10, height: 36)
+        }, completion: nil)
         
         users?.scrollToMenuIndex(menuIndex: indexPath.item)
     }
@@ -68,10 +78,8 @@ class MyPageBar: UIView, UICollectionViewDataSource, UICollectionViewDelegate, U
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: resID, for: indexPath) as! usersCell
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: pageID, for: indexPath) as! usersCell
         cell.barLabels.text = resGroups[indexPath.item]
-        cell.barImage.image = UIImage(named: resGroups[indexPath.item])
-        cell.barImage.image = cell.barImage.image?.withRenderingMode(.alwaysTemplate)
         return cell
     }
     
@@ -89,33 +97,26 @@ class MyPageBar: UIView, UICollectionViewDataSource, UICollectionViewDelegate, U
 
 class usersCell: UICollectionViewCell {
     
-    let barImage: UIImageView = {
-        let iv = UIImageView()
-        iv.contentMode = .scaleAspectFit
-        iv.tintColor = .mainGray
-        return iv
-    }()
-    
     let barLabels: UILabel = {
         let label = UILabel()
         label.textAlignment = NSTextAlignment.center
         label.translatesAutoresizingMaskIntoConstraints = false
-        label.textColor = .darkGray
-        label.font = UIFont(name: "DMSans-Medium", size: 13)
+        label.textColor = .black
+        label.font = UIFont(name: "DMSans-Medium", size: 15)
+        label.layer.cornerRadius = 15
+        label.layer.masksToBounds = true
         return label
     }()
     
     override var isHighlighted: Bool {
         didSet {
-            barImage.tintColor  = isHighlighted ? UIColor.mainColor : UIColor.mainGray
-            barLabels.textColor = isHighlighted ? UIColor.mainColor : UIColor.mainGray
+            barLabels.textColor = isHighlighted ? UIColor.white : UIColor.black
         }
     }
     
     override var isSelected: Bool {
         didSet {
-            barImage.tintColor  = isSelected ? UIColor.mainColor : UIColor.mainGray
-            barLabels.textColor = isSelected ? UIColor.mainColor : UIColor.mainGray
+            barLabels.textColor = isSelected ? UIColor.white : UIColor.black
         }
     }
     
@@ -129,14 +130,10 @@ class usersCell: UICollectionViewCell {
     
     
     func setupViews() {
-        backgroundColor = .white
-        addSubview(barImage)
+        backgroundColor = .clear
         addSubview(barLabels)
-        
-        let barImageSize: CGFloat = 30.0
-        
-        barLabelsConstraint = barLabels.anchor(nil, left: self.leftAnchor, bottom: self.bottomAnchor, right: self.rightAnchor, topConstant: 0, leftConstant: 0, bottomConstant: 6, rightConstant: 0, widthConstant: 0, heightConstant: 16).first
-        barImage.frame = CGRect(x: (frame.width / 2) - (barImageSize / 2), y: 5, width: barImageSize, height: barImageSize)
+
+        barLabelsConstraint = barLabels.anchor(self.topAnchor, left: self.leftAnchor, bottom: self.bottomAnchor, right: self.rightAnchor, topConstant: 0, leftConstant: 5, bottomConstant: 0, rightConstant: 5, widthConstant: 0, heightConstant: 0).first
         
         
     }
