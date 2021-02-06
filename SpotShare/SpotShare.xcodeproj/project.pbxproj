@@ -698,7 +698,8 @@
 			baseConfigurationReference = 69F21B1EE57C3F4C78FB387B /* Pods-SpotShare.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_IDENTITY = "iPhone Distribution";
+				CODE_SIGN_STYLE = Manual;
 				DEVELOPMENT_TEAM = 3D2JL6BMG3;
 				INFOPLIST_FILE = SpotShare/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
@@ -708,6 +709,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = partners.SpotShare;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = spotshare_appstrot;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
 			};
@@ -718,7 +720,8 @@
 			baseConfigurationReference = 62E2732E3D27AE87FE527BC5 /* Pods-SpotShare.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_IDENTITY = "iPhone Distribution";
+				CODE_SIGN_STYLE = Manual;
 				DEVELOPMENT_TEAM = 3D2JL6BMG3;
 				INFOPLIST_FILE = SpotShare/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
@@ -728,6 +731,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = partners.SpotShare;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = spotshare_appstrot;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
 			};
